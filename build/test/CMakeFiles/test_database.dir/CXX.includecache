@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/database.h
+fstream
+-
+map
+-
+cstring
+-
+cctype
+-
+string
+-
+
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/test/test.h
+iostream
+-
+exception
+-
+fstream
+-
+
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/test/test_database.cpp
+database.h
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/test/database.h
+test.h
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/test/test.h
+cstdio
+-
+

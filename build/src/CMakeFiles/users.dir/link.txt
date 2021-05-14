@@ -1,0 +1,2 @@
+/bin/ar qc libusers.a  CMakeFiles/users.dir/user.cpp.o
+/bin/ranlib libusers.a

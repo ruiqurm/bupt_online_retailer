@@ -1,0 +1,11 @@
+macro(UNIT_TEST filename lib)
+   add_executable(        ${filename}  ${filename}.cpp )
+   target_link_libraries( ${filename}  ${lib})
+   add_test(              ${filename}  ${CMAKE_CURRENT_BINARY_DIR}/${filename} )
+endmacro(UNIT_TEST)
+
+UNIT_TEST(test_database database)
+# SET(TEMP user database)
+# UNIT_TEST(test_user_register_login TEMP)
+add_executable(test_user_register_login  test_user_register_login.cpp )
+target_link_libraries(test_user_register_login users)

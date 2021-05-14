@@ -1,0 +1,13 @@
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/CMakeFiles/rebuild_cache.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/CMakeFiles/edit_cache.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/CMakeFiles/test.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/src/CMakeFiles/rebuild_cache.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/src/CMakeFiles/edit_cache.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/src/CMakeFiles/test.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/src/CMakeFiles/users.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/src/CMakeFiles/database.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/test/CMakeFiles/rebuild_cache.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/test/CMakeFiles/edit_cache.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/test/CMakeFiles/test.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/test/CMakeFiles/test_user_register_login.dir
+/home/ruiqurm/bupt/cppcourse/online_retailers/part1/build/test/CMakeFiles/test_database.dir
