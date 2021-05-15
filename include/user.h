@@ -6,7 +6,7 @@
 #include"database.h"
 using std::string;
 using std::ostream;
-
+using std::shared_ptr;
 enum USER_TYPE{
     customer=0,
     seller=1
@@ -28,16 +28,25 @@ enum USER_TYPE{
 class User{
     public:
         // friend std::shared_ptr<User> UserManager::login(string username,string password);//允许login调用构造函数
-        
-
-        virtual ~User();
-        virtual int getUserType()const;
-
+        virtual ~User(){}
+        virtual int get_user_type()const=0;
+        string get_user_name()const{
+            return data->username;
+        }
+        int get_balance()const{
+            return data->balance;
+        }
+        int get_pk()const{
+            return data->pk;
+        }
+        bool operator==(const User& u)const{
+            return data==u.data;
+        }
     protected:
         User(UserData* p):data(p){}
         unsigned short _TYPE;
     private:
-        UserData * data;
+        UserData* data;
         // ConsumingRecordsManager* records;
         
 };
@@ -51,22 +60,25 @@ class UserTemplate: public User{
    public:
         static User* instance(UserData * data) { return new IMPL(data); }
         static const unsigned short USER_TYPE_ID; 
-
+        // static void Enable() { volatile uint16_t x =  }
    protected:
-      UserTemplate(UserData* p):User(p) { _TYPE = _USER_TYPE_ID; } 
+      UserTemplate(UserData* p):User(p) { _TYPE = USER_TYPE_ID; } 
 };
 class UserManager final{
     //管理所有在线的用户
     public:
         typedef User* (*p_user_construct)(UserData *);
+
+        /*
+        单例模式
+        */
         static UserManager& getInstance(){
-            //单例模式
             static UserManager manager;
             return manager;
         }
-        void logout(){
 
-        }
+        // void logout(){
+        // }
         bool register_(USER_TYPE type,string username,string password){
             auto& record = UserRecord::get_record();
             if(!validate_username(username)){
@@ -80,32 +92,39 @@ class UserManager final{
             }
             return record.set(UserData(-1,username.c_str(),password.c_str(),0,static_cast<int>(type)));//写入数据库
         }
-        User* login(string username,string password){
+        shared_ptr<User> login(string username,string password){
+            // auto it =users.find(username);
+            // if (it!=users.end()){
+            //     //已经登录过了
+            //     return create_user(it->second.type,&it->second);
+            // }
             auto&record = UserRecord::get_record();
-            auto data = record.get(username);
-            if(data->pk==-1){
-                return nullptr;
+            UserData* data = record.update(username);
+            if(!data){
+                throw "no exist";
+                // return ;
             }
-            if(data->password != password){
-                return nullptr;
+            if(strcmp(data->password,password.c_str())){
+                throw "password error";
+                // return nullptr;
             }
-            if(users.find(data->username)==users.end()){
-                //没有登录过
-                users.emplace(data->username,*data);
-            }
-            return create_user(data->type,&users[data->username]);
+            return create_user(data->type,data);
         }
         unsigned short register_type(unsigned short id, p_user_construct factoryMethod){
-            printf("Registering constructor for msg id %d\n", id);
+            printf("Registering constructor for user id %d\n", id);
             register_types[id] = factoryMethod;
             return id;
         }
     protected:
         UserManager(){}
-        User *create_user(uint16_t msgid,UserData* data){
-            return register_types[msgid](data);
+        shared_ptr<User> create_user(uint16_t msgid,UserData* data){
+            return shared_ptr<User>(register_types[msgid](data));
         }
     private:
+        ~UserManager(){}
+        UserManager(const UserManager&){};
+        UserManager& operator=(const UserManager&);
+
         static const std::regex USERNAME_PATTERN;
         static const std::regex PASSWORD_PATTERN;
         bool validate_username(const string&username){
@@ -115,17 +134,18 @@ class UserManager final{
             return std::regex_match(password,PASSWORD_PATTERN);
         }
         p_user_construct register_types[256];
-        std::map<string,UserData> users;
+        // std::map<string,UserData> users;
 };
+
+
 template <int TYPE, typename IMPL>
 const unsigned short UserTemplate<TYPE, IMPL>::USER_TYPE_ID = UserManager::getInstance().register_type(
-    UserTemplate<TYPE, IMPL >::USER_TYPE_ID, &UserTemplate<TYPE, IMPL >::instance);
-
+    UserTemplate<TYPE, IMPL >::_USER_TYPE_ID, &UserTemplate<TYPE, IMPL >::instance);
 
 class Seller:public UserTemplate<seller,Seller>{
     public:
         Seller(UserData* p):UserTemplate(p){}
-        int getUserType()const override{
+        int get_user_type()const override{
             return _TYPE;
         }
         ~Seller(){}
@@ -134,7 +154,11 @@ class Seller:public UserTemplate<seller,Seller>{
 class Customer:public UserTemplate<customer,Customer>{
     public:
         Customer(UserData* p):UserTemplate(p){}
+        int get_user_type()const override{
+            return _TYPE;
+        }
         ~Customer(){}
 };
+
 
 

@@ -3,6 +3,7 @@
 #include "database.h"
 #include<iostream>
 
+
 using namespace std;
 
 int main(){
@@ -13,11 +14,13 @@ int main(){
         ASSERT(manager.register_(customer,"aaaa","123456")==1,"register error");
         ASSERT(record.size()==1,"register error(database error)");
         
-        User* u = manager.login("aaaa","123456");
-        cout<<"ok"<<endl;
+        auto u = manager.login("aaaa","123456");
         ASSERT(u!=nullptr,"login failed");
-
-        ASSERT(u->getUserType()!=customer,"类别错误");
+        ASSERT(u->get_user_type()==customer,"类别错误");
+        ASSERT(u->get_user_name()==string("aaaa"),"名字错误");
+        auto u2 = manager.login("aaaa","123456");
+        ASSERT(*u==*u2,"登录管理有问题");
+        
     }catch(const char*err){
         cerr<<err<<endl;
         remove_database();

@@ -1,1 +1,0 @@
-/usr/bin/clang++    -rdynamic CMakeFiles/test_user_register_login.dir/test_user_register_login.cpp.o  -o test_user_register_login  ../src/libusers.a 
