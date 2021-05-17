@@ -37,7 +37,7 @@ class User{
             return data->balance;
         }
         int get_pk()const{
-            return data->pk;
+            return data->id;
         }
         bool operator==(const User& u)const{
             return data==u.data;

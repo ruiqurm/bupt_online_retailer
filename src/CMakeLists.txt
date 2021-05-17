@@ -4,4 +4,5 @@ set(CMAKE_C_FLAGS,"-werror -std=c++14")
 
 add_library(database STATIC database.cpp)
 add_library(users STATIC user.cpp)
+add_library(goods STATIC goods database)
 

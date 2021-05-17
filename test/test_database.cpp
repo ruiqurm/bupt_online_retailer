@@ -14,7 +14,7 @@ UserData data[10]{
     {8,"test user8","123",40,0},//错误数据
 };
 std::ostream& operator<<(std::ostream&os,const UserData& data){
-    os<<data.pk<<" "<<data.username<<" "<<data.password<<" "<<data.balance;
+    os<<data.id<<" "<<data.username<<" "<<data.password<<" "<<data.balance;
     return os;
 }
 int main(){
