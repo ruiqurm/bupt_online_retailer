@@ -1,3 +1,5 @@
+set(CMAKE_CXX_FLAGS,"-Wall")
+
 macro(UNIT_TEST filename lib)
    add_executable(        ${filename}  ${filename}.cpp )
    target_link_libraries( ${filename}  ${lib})
@@ -10,13 +12,10 @@ macro(UNIT_TEST_MULT_LIB filename lib)
    add_test(              ${filename}  ${CMAKE_CURRENT_BINARY_DIR}/${filename} )
 endmacro(UNIT_TEST_MULT_LIB)
 
-UNIT_TEST(test_database database)
-# SET(TEMP user database)
-# UNIT_TEST(test_user_register_login TEMP)
-set(test_user_register_login_lib 
+set(test_user_lib 
     users 
     database)
-UNIT_TEST_MULT_LIB(test_user_register_login test_user_register_login_lib)
+UNIT_TEST_MULT_LIB(test_user test_user_lib)
 
 set(test_goodsrecord_lib
     goods

@@ -3,7 +3,8 @@
 #include<iostream>
 using namespace std;
 
-int main(){
+int main(int argc,char**argv){
+    database_clean::parse_argument(argc,argv);
     {
         GoodsRecord record;
         GoodsData data{"aaaa",2.0,1};
@@ -14,5 +15,5 @@ int main(){
         record.remove(x);
         cout<<"remove data from row "<<x<<endl;
     }
-    remove_database();
+    database_clean::remove_database();
 }

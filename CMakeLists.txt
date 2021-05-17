@@ -2,11 +2,15 @@ cmake_minimum_required(VERSION 2.8)
 project(online_ratailers)
 SET(CMAKE_C_COMPILER /usr/bin/clang)
 SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
+set(CMAKE_CXX_STANDARD 17) # 使用c++17
 
 find_package (SQLite3)
 if (SQLITE3_FOUND)
   include_directories(${SQLITE3_INCLUDE_DIRS})
+else()
+  message(FATAL_ERROR "FATAL: Can't find sqlite3.")
 endif (SQLITE3_FOUND)
+
 #Generate the shared library from the library sources
 # add_library(online_ratailers SHARED 
     # src/Hello.cpp

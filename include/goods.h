@@ -5,32 +5,33 @@ using std::string;
 class GoodsData{
     public:
         char name[64];
-        string description;
+        // string description;
         double price;
         int seller;// primary key of seller
         int id;
-        int remain;
-
+        // int remain;
 };
 class Goods{
     public:
         Goods();
         Goods(int id,const char name[],double price,int seller):
             id(id),name(name),price(price),seller(seller){
-
+                #if debug==1
+                std::cout<<"create goods name="<<name<<std::endl;
+                #endif
             }
         string get_name(){return name;}
-        string get_descr(){return description;}
+        // string get_descr(){return description;}
         double get_price(){return price;}
-        int get_remain(){return remain;}
+        // int get_remain(){return remain;}
 
         int get_id(){return id;}
         // void save();
 
     private:
         string name;
-        string description;
-        int remain;
+        // string description;
+        // int remain;
         double price;
         int seller;
         // User* user;
@@ -46,7 +47,10 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
                                         "ID INTEGER PRIMARY KEY AUTOINCREMENT," \
                                         "NAME           CHAR(64)    NOT NULL," \
                                         "PRICE          FLOAT       NOT NULL," \
-                                        "SELLER         INT         NOT NULL);";
+                                        "SELLER         INT         NOT NULL);"; 
+                                        // "DESCRIPTION    TEXT        NOT NULL"  \
+                                        
+                                        //"REMAIN         INT         NOT NULL);";
             Database::exec(db,sql,nullptr,nullptr);
         }
         Goods get(int id){
@@ -59,7 +63,6 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
             return Goods(goods.id,goods.name,goods.price,goods.seller);
         }
     protected:
-
         void _data_to_string(char buffer[],const GoodsData& data){
             static char sql[] =  "INSERT INTO %s (NAME,PRICE,SELLER) VALUES ('%s', %d, %d ); ";
             sprintf(buffer,sql,TABLE_NAME,data.name,data.price,data.seller);
