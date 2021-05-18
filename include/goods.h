@@ -1,5 +1,7 @@
 #pragma once
 #include<string>
+#include<vector>
+#include<memory>
 #include"database.h"
 using std::string;
 class GoodsData{
@@ -24,6 +26,9 @@ class Goods{
         // string get_descr(){return description;}
         double get_price(){return price;}
         // int get_remain(){return remain;}
+        virtual int get_goods_type()const=0;
+        virtual double get_price()const=0;
+        // void set_remain()const;
 
         int get_id(){return id;}
         // void save();
@@ -53,15 +58,23 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
                                         //"REMAIN         INT         NOT NULL);";
             Database::exec(db,sql,nullptr,nullptr);
         }
-        Goods get(int id){
+        std::shared_ptr<Goods> get(int id){
             static const char sql[] = "SELECT * FROM %s WHERE ID=%d";
-            static char buffer[256]; //可能缓冲区溢出？
+            static char buffer[48]; 
             GoodsData goods;
 
             sprintf(buffer,sql,TABLE_NAME,id);
             Database::exec(db,buffer,fetch_in_struct,&goods);
-            return Goods(goods.id,goods.name,goods.price,goods.seller);
+            return std::make_shared<Goods>(goods.id,goods.name,goods.price,goods.seller);
         }
+        std::vector<std::shared_ptr<Goods>> get_user_goods(int seller_id){
+            static char sql[] =  "SELECT * FROM %s WHERE SELLER=%d";
+            static char buffer[48];
+            std::vector<std::shared_ptr<Goods>>vec;
+            sprintf(buffer,sql,TABLE_NAME,seller_id);
+            Database::exec(db,buffer,fetch_in_vector,&vec);
+        }
+        
     protected:
         void _data_to_string(char buffer[],const GoodsData& data){
             static char sql[] =  "INSERT INTO %s (NAME,PRICE,SELLER) VALUES ('%s', %d, %d ); ";
@@ -73,6 +86,12 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
             strcpy(data->name,argv[1]);
             data->price = atof(argv[2]);
             data->seller = atoi(argv[3]);
+            return 0;
+        }
+        static int fetch_in_vector(void*_data, int argc, char **argv, char **azColName){
+            typedef std::vector<std::shared_ptr<Goods>> data_type;
+            data_type*pvec = (data_type*)_data;
+            pvec->push_back(std::make_shared<Goods>(atoi(argv[0]),argv[1],atof(argv[2]),atoi(argv[3])));
             return 0;
         }
 

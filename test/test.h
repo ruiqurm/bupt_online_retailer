@@ -1,13 +1,15 @@
+#pragma once
 #include<iostream>
 #include<exception>
 #include<fstream>
 #include<map>
 #include<cstring>
-// #include<random>
-using std::ifstream;
-using std::cerr;
-using std::map;
+#include<filesystem>
+using namespace std;
 #define ASSERT(bool_expression,hint) if(!(bool_expression)){throw hint;}
+
+
+// hacking
 
 // class TestException:public std::exception{
 //      explicit TestException(const char* message)
@@ -30,8 +32,7 @@ using std::map;
 //     std::string msg_;
 // };
 bool exist(const char* file) {
-    std::ifstream f(file);
-    return f.good();
+    return std::filesystem::exists(file);
 }
 class database_clean{
     public:
@@ -45,18 +46,15 @@ class database_clean{
             }
         }
         static void parse_argument(int argc,char**argv){
-            if(argc<2){
-                remove_database();
+            if(argc<1){
                 return;
             }
-            for(int i=2;i<argc;i++){
+            for(int i=1;i<argc;i++){
                 if(!strcmp(argv[i],"-pd")){
-                    if_clean=true;
+                    if_clean=false;
                 }
             }
-            remove_database();
         }
-    private:
         static bool if_clean;
 };
-bool database_clean::if_clean=false;
+bool database_clean::if_clean=true;

@@ -1,9 +1,13 @@
+#pragma once
 #include<string>
 #include<iostream>
 #include<memory>
 #include<regex>
 #include<map>
+#include <filesystem>
 #include"database.h"
+
+
 using std::string;
 using std::ostream;
 using std::shared_ptr;
@@ -28,7 +32,6 @@ class UserData{
 };
 class User{
     public:
-        // friend std::shared_ptr<User> UserManager::login(string username,string password);//允许login调用构造函数
         virtual ~User(){}
         virtual int get_user_type()const=0;
         string get_user_name()const{
@@ -50,43 +53,6 @@ class User{
         // ConsumingRecordsManager* records;
         
 };
-// class UserRecord:public RecordInterfase<User,UserData>{
-//     public:
-//         UserRecord(const UserRecord&) = delete;
-//         UserRecord &operator=(const UserRecord&) = delete;
-//         //阻止拷贝构造
-
-//         static UserRecord& get_record(){
-//             static UserRecord record;
-//             return record;
-//         }
-//         User* get(int id)override;
-//         User* get(const std::string& username);
-//         int set(UserData data)override;
-//         void remove(const std::string& username);
-//         void remove(int id)override;
-//         // UserData* update(int id);
-//         // UserData* update(const std::string& username);
-//         int size(){return (name_to_data.size());}
-//         bool exist(const std::string& username){return (name_to_data.find(username)!=name_to_data.end());}
-//         int load();
-//         void save();
-//         ~UserRecord(){}
-//     protected:
-//         bool file_exist(const char* file) {
-//             std::ifstream f(file);
-//             return f.good();
-//         }
-//         UserRecord();
-//     private:
-//         std::map<std::string,UserData> name_to_data;
-//         std::map<int,std::string> pk_to_name;
-//         std::ofstream database;
-//         int max_pk;
-//         static constexpr const char* USER_FILE_NAME="user-record.txt";
-//         static constexpr int USERDATA_SIZE = sizeof(UserData);
-// };
-
 
 template<int TYPE, typename IMPL>
 class UserTemplate: public User{
@@ -101,8 +67,15 @@ class UserTemplate: public User{
    protected:
       UserTemplate(UserData* p):User(p) { _TYPE = USER_TYPE_ID; } 
 };
+
+#ifdef MY_DEBUG
+class test_usermanager;
+#endif
 class UserManager final{
     //管理所有在线的用户
+    #ifdef MY_DEBUG
+        friend class test_usermanager;
+    #endif
     public:
         typedef User* (*p_user_construct)(UserData *);
 
@@ -123,14 +96,11 @@ class UserManager final{
         }
         int load();
         static constexpr const char* USER_FILE_NAME="user-record.txt";
-    protected:
+    
+    private://用于后续的测试
         UserManager();
         shared_ptr<User> create_user(uint16_t msgid,UserData* data){
             return shared_ptr<User>(register_types[msgid](data));
-        }
-        bool file_exist(const char* file) {
-            std::ifstream f(file);
-            return f.good();
         }
         bool validate_username(const string&username){
             return std::regex_match(username,USERNAME_PATTERN);
@@ -139,8 +109,6 @@ class UserManager final{
             return std::regex_match(password,PASSWORD_PATTERN);
         }
         UserData* get(const std::string& username);
-
-    private:
 
         ~UserManager(){}
         UserManager(const UserManager&){};
@@ -183,30 +151,14 @@ template <int TYPE, typename IMPL>
 const unsigned short UserTemplate<TYPE, IMPL>::USER_TYPE_ID = UserManager::getInstance().register_type(
     UserTemplate<TYPE, IMPL >::_USER_TYPE_ID, &UserTemplate<TYPE, IMPL >::instance);
 
-class Seller:public UserTemplate<seller,Seller>{
-    public:
-        Seller(UserData* p):UserTemplate(p){}
-        int get_user_type()const override{
-            return _TYPE;
-        }
-        ~Seller(){}
-};
-
-class Customer:public UserTemplate<customer,Customer>{
-    public:
-        Customer(UserData* p):UserTemplate(p){}
-        int get_user_type()const override{
-            return _TYPE;
-        }
-        ~Customer(){}
-};
 
 
 /*
 * 内联实现
 */
 inline UserManager::UserManager(){
-    if (file_exist(USER_FILE_NAME)){
+    
+    if (std::filesystem::exists(USER_FILE_NAME)){
         load();
         database.open(USER_FILE_NAME,std::ios::in|std::ios::out);
         //不会覆盖原来的内容
@@ -253,7 +205,7 @@ inline UserData*  UserManager::get_userdata(const string&username){
     return nullptr;
 }
 
-shared_ptr<User> UserManager::login(string username,string password){
+inline shared_ptr<User> UserManager::login(string username,string password){
     UserData* data = get_userdata(username);
     if(!data){
         throw "no exist";

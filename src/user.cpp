@@ -40,6 +40,8 @@ bool UserManager::register_(USER_TYPE type,const string& username,const string& 
 int UserManager::load(){
     int count=0,i=0;
     std::ifstream f(USER_FILE_NAME);
+    if (!name_to_data.empty())name_to_data.clear();
+    if (!pk_to_name.empty())pk_to_name.clear();
     UserData tmpdata;
     max_pk=0;
     while(f>>tmpdata.id){
