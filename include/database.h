@@ -33,24 +33,13 @@ class Database{
 
 };
 
-
-template<typename T_class,typename T_data>
-class RecordInterfase{
-    public:
-        virtual T_class* get(int id)=0;
-        virtual int set(T_data)=0;
-        virtual void remove(int id)=0;
-        // virtual T* update(int id)=0;
-};
-
-
 template<typename T_class,typename T_data>
 class MetaRecord{//通用基类
     public:
         MetaRecord():db(Database::get_db()){};
         
         // 模板类实现必须放在头文件里，否则无法编译
-        // T_class get(int id){
+        virtual std::shared_ptr<T_class> get(int id)=0;
         //     static const char sql[] = "SELECT * FROM %s WHERE ID=%d";
         //     static char buffer[256]; //可能缓冲区溢出？
         //     T_data data;
@@ -79,8 +68,7 @@ class MetaRecord{//通用基类
         virtual void _data_to_string(char buffer[],const T_data&)=0;
         static const char TABLE_NAME[];
         sqlite3 *db;
-        // static int fetch_in_struct(void*data, int argc, char **argv, char **azColName);
-        //static是因为作为sql回调
+
 };
 
 // class GoodsRecord{

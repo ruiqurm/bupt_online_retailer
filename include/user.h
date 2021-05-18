@@ -57,6 +57,7 @@ class User{
 template<int TYPE, typename IMPL>
 class UserTemplate: public User{
     // 用于向Manager注册类
+    // CRTP
     // 参考：https://stackoverflow.com/questions/2850213/dynamically-register-constructor-methods-in-an-abstractfactory-at-compile-time-u
    
    enum {_USER_TYPE_ID = TYPE };

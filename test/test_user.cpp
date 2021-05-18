@@ -6,6 +6,7 @@
 #include<map>
 #define MY_DEBUG
 #include "user.h"
+#include"concreteUser.h"
 using namespace std;
 
 class test_usermanager{
