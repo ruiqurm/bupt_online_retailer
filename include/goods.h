@@ -65,7 +65,7 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
         std::shared_ptr<Goods> get(int id);
 
         pGoodsVec get_user_goods(int seller_id);
-        
+        pGoodsVec get_all_goods();
     protected:
         GoodsRecord();
 
@@ -92,7 +92,7 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
             return 0;
         }
     private:
-        const UserManager& manager;
+        const UserRecord& manager;
         
 };
 

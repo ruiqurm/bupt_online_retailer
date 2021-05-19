@@ -4,28 +4,33 @@
 
 class Seller:public UserTemplate<seller,Seller>{
     public:
-        Seller(UserData* p):UserTemplate(p),has_load_goods(false){}
+        Seller(const UserData& p):UserTemplate(p),has_load_goods(false){}
         int get_user_type()const override{
             return _TYPE;
         }
-        void add_goods(Goods*);
-        void goods(){
+        void add_goods(const Goods& g){
+
+        }
+        const std::vector<std::shared_ptr<Goods>>& goods(){
             if (!has_load_goods){
                 auto& record = GoodsRecord::get_record();
-                // all_goods.assign();
+                _goods = record.get_user_goods(data->id);
+                has_load_goods = true;
             }
+            return *_goods;
         }
         ~Seller(){}
     private:
-        std::vector<std::shared_ptr<Goods>>all_goods;
+        std::unique_ptr<std::vector<std::shared_ptr<Goods>>>_goods;
         bool has_load_goods;
 };
 
 class Customer:public UserTemplate<customer,Customer>{
     public:
-        Customer(UserData* p):UserTemplate(p){}
+        Customer(const UserData& p):UserTemplate(p){}
         int get_user_type()const override{
             return _TYPE;
         }
+        void buy();
         ~Customer(){}
 };

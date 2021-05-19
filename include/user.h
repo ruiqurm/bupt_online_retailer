@@ -17,40 +17,54 @@ enum USER_TYPE{
 };
 class UserData{
     public:
-        char username[32];
-        char password[16];
+        // char username[32];
+        // char password[16];
+        string username;
+        string password;
         int id;
         int balance;
         int type;
         UserData(){}
         UserData(int id,const char*username,
                 const char*password,int balance,
-                int type):id(id),balance(balance),type(type){
-                    strcpy(this->username,username);
-                    strcpy(this->password,password);
-        }
+                int type):id(id),balance(balance),type(type),username(username),password(password){}
+        UserData(int id,const string& username,
+        const string& password,int balance,
+        int type):id(id),balance(balance),type(type),username(username),password(password){}
 };
 class User{
     public:
         virtual ~User(){}
         virtual int get_user_type()const=0;
-        string get_user_name()const{
-            return data->username;
-        }
-        int get_balance()const{
-            return data->balance;
-        }
-        int get_pk()const{
-            return data->id;
-        }
+        
+        //登录与注册
+        static std::unique_ptr<User> login(const string& username,const string& password);
+        static bool register_(USER_TYPE type,const string& username,const string& password);
+        
+        // bool change_password(const string&password){
+        //     if(!validate_password)"throw password syntax error";
+        //     auto& record = UserRecord::get_record();
+        //     record.
+        // }
+        const string& username()const{return data->username;}
+        int balance()const{return data->balance;}
+        int id()const{return data->id;}
         bool operator==(const User& u)const{
             return data==u.data;
         }
+        static bool validate_username(const string&username){
+            return std::regex_match(username,USERNAME_PATTERN);
+        }
+        static bool validate_password(const string&password){
+            return std::regex_match(password,PASSWORD_PATTERN);
+        }
     protected:
-        User(UserData* p):data(p){}
-        UserData* data;
+        User(const UserData& p):data(std::make_unique<UserData>(p)){}
+        std::unique_ptr<UserData> data;
         unsigned short _TYPE;
-        // ConsumingRecordsManager* records;
+    private:
+        static const std::regex USERNAME_PATTERN;
+        static const std::regex PASSWORD_PATTERN;
         
 };
 
@@ -62,34 +76,36 @@ class UserTemplate: public User{
    
    enum {_USER_TYPE_ID = TYPE };
    public:
-        static User* instance(UserData * data) { return new IMPL(data); }
+        static std::unique_ptr<User> instance(const UserData& data) { return std::make_unique<IMPL>(data);}
         static const unsigned short USER_TYPE_ID; 
         // static void Enable() { volatile uint16_t x =  }
    protected:
-      UserTemplate(UserData* p):User(p) { _TYPE = USER_TYPE_ID; } 
+      UserTemplate(const UserData& p):User(p) { _TYPE = USER_TYPE_ID; } 
 };
 
 #ifdef MY_DEBUG
 class test_usermanager;
 #endif
-class UserManager final{
-    //管理所有在线的用户
+class UserRecord final{
     #ifdef MY_DEBUG
         friend class test_usermanager;
     #endif
     public:
-        typedef User* (*p_user_construct)(UserData *);
+        typedef std::unique_ptr<User> (*p_user_construct)(const UserData &);
 
-        static UserManager& getInstance(){
-            static UserManager manager;//单例模式
+        static UserRecord& get_record(){
+            static UserRecord manager;//单例模式
             return manager;
         }
         
-        bool register_(USER_TYPE type,const string& username,const string& password);
-        shared_ptr<User> login(string username,string password);
+        void set(USER_TYPE type,const string& username,const string& password);
+        UserData* get(const std::string&username);
         void remove(int id);
         void remove(const std::string& username);
-        UserData* get_userdata(const string&username);
+        
+        std::unique_ptr<User> create_user(uint16_t msgid,const UserData& data){
+            return register_types[msgid](data);
+        }
         unsigned short register_type(unsigned short id, p_user_construct factoryMethod){
             printf("Registering constructor for user id %d\n", id);
             register_types[id] = factoryMethod;
@@ -98,25 +114,11 @@ class UserManager final{
         int load();
         static constexpr const char* USER_FILE_NAME="user-record.txt";
     
-    private://用于后续的测试
-        UserManager();
-        shared_ptr<User> create_user(uint16_t msgid,UserData* data){
-            return shared_ptr<User>(register_types[msgid](data));
-        }
-        bool validate_username(const string&username){
-            return std::regex_match(username,USERNAME_PATTERN);
-        }
-        bool validate_password(const string&password){
-            return std::regex_match(password,PASSWORD_PATTERN);
-        }
-        UserData* get(const std::string& username);
-
-        ~UserManager(){}
-        UserManager(const UserManager&){};
-        UserManager& operator=(const UserManager&);
-
-        static const std::regex USERNAME_PATTERN;
-        static const std::regex PASSWORD_PATTERN;
+    private:
+        UserRecord();
+        ~UserRecord(){}
+        UserRecord(const UserRecord&){};
+        UserRecord& operator=(const UserRecord&);
 
         p_user_construct register_types[256];
 
@@ -149,7 +151,7 @@ class UserManager final{
 
 
 template <int TYPE, typename IMPL>
-const unsigned short UserTemplate<TYPE, IMPL>::USER_TYPE_ID = UserManager::getInstance().register_type(
+const unsigned short UserTemplate<TYPE, IMPL>::USER_TYPE_ID = UserRecord::get_record().register_type(
     UserTemplate<TYPE, IMPL >::_USER_TYPE_ID, &UserTemplate<TYPE, IMPL >::instance);
 
 
@@ -157,7 +159,7 @@ const unsigned short UserTemplate<TYPE, IMPL>::USER_TYPE_ID = UserManager::getIn
 /*
 * 内联实现
 */
-inline UserManager::UserManager(){
+inline UserRecord::UserRecord(){
     
     if (std::filesystem::exists(USER_FILE_NAME)){
         load();
@@ -170,27 +172,33 @@ inline UserManager::UserManager(){
         throw "can't open user record file.";
     }
 }
-inline void UserManager::insert_data(const UserData&data){
+inline void UserRecord::insert_data(const UserData&data){
     if(data.id<=0)return;
     set_write_cursor_to_nth_line(data.id);
     database<<data.id<<" "<<data.username<<" "<<data.password<<" "<<data.balance<<" "<<data.type<<"\0\0\0";
     write_LF_nth_line(data.id);
 }
-inline void UserManager::remove_data(int id){
+// inline void UserRecord::in(const UserData&data){
+//     if(data.id<=0)return;
+//     set_write_cursor_to_nth_line(data.id);
+//     database<<data.id<<" "<<data.username<<" "<<data.password<<" "<<data.balance<<" "<<data.type<<"\0\0\0";
+//     write_LF_nth_line(data.id);
+// }
+inline void UserRecord::remove_data(int id){
     if(id<=0)return;
     //不判断是否存在了.
     set_write_cursor_to_nth_line(id);
     database<<"0\0";database.flush();
     write_LF_nth_line(id);
 }
-inline void UserManager::remove(int id){
+inline void UserRecord::remove(int id){
     auto it = pk_to_name.find(id);
     if(it==pk_to_name.end())return;
     name_to_data.erase(it->second);
     pk_to_name.erase(id);
     remove_data(id);
 }
-inline void UserManager::remove(const std::string& username){
+inline void UserRecord::remove(const std::string& username){
     auto it = name_to_data.find(username);
     if(it==name_to_data.end())return;
     int id = it->second.id;
@@ -198,7 +206,7 @@ inline void UserManager::remove(const std::string& username){
     name_to_data.erase(it);
     remove_data(id);
 }
-inline UserData*  UserManager::get_userdata(const string&username){
+inline UserData* UserRecord::get(const string&username){
     auto it = name_to_data.find(username);
     if(it!=name_to_data.end()){
         return &it->second;
@@ -206,13 +214,4 @@ inline UserData*  UserManager::get_userdata(const string&username){
     return nullptr;
 }
 
-inline shared_ptr<User> UserManager::login(string username,string password){
-    UserData* data = get_userdata(username);
-    if(!data){
-        throw "no exist";
-    }
-    if(strcmp(data->password,password.c_str())){
-        throw "password error";
-    }
-    return create_user(data->type,data);
-}
+

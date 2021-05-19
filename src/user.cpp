@@ -1,14 +1,15 @@
 #include "user.h"
 
-const std::regex UserManager::USERNAME_PATTERN = std::regex("^[\\w,-_,!@#$%^&*()]{4,16}$");
-const std::regex UserManager::PASSWORD_PATTERN = std::regex("^[\\w,-_,!@#$%^&*()]{4,16}$");
+const std::regex User::USERNAME_PATTERN = std::regex("^[\\w,-_,!@#$%^&*()]{4,16}$");
+const std::regex User::PASSWORD_PATTERN = std::regex("^[\\w,-_,!@#$%^&*()]{4,16}$");
 
 
 /*
 * 
 */
-bool UserManager::register_(USER_TYPE type,const string& username,const string& password){
-    if (get_userdata(username)){
+bool User::register_(USER_TYPE type,const string& username,const string& password){
+    auto& record = UserRecord::get_record();
+    if (record.get(username)){
         return false;
     }
     char*c= const_cast<char*>(username.c_str());
@@ -30,14 +31,10 @@ bool UserManager::register_(USER_TYPE type,const string& username,const string& 
     if(!validate_password(password)){
         throw "password syntax error";
     }
-    max_pk++;
-    UserData data(max_pk,username.c_str(),password.c_str(),0,type);
-    name_to_data.emplace(username,data);
-    pk_to_name.emplace(max_pk,username);
-    insert_data(data);
+    record.set(type,username,password);
     return true;
 }
-int UserManager::load(){
+int UserRecord::load(){
     int count=0,i=0;
     std::ifstream f(USER_FILE_NAME);
     if (!name_to_data.empty())name_to_data.clear();
@@ -57,7 +54,24 @@ int UserManager::load(){
     }
     return count;
 }
-
+void UserRecord::set(USER_TYPE type,const string& username,const string& password){
+    max_pk++;
+    UserData data(max_pk,username.c_str(),password.c_str(),0,type);
+    name_to_data.emplace(username,data);
+    pk_to_name.emplace(max_pk,username);
+    insert_data(data);
+}
+std::unique_ptr<User> User::login(const string& username,const string& password){
+    auto& record = UserRecord::get_record();
+    UserData* data = record.get(username);
+    if(!data){
+        throw "no exist";
+    }
+    if(data->password!=password){
+        throw "password error";
+    }
+    return record.create_user(data->type,*data);
+}
 // UserRecord::UserRecord(){
 //     if (file_exist(USER_FILE_NAME)){
 //         load();

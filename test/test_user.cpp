@@ -11,9 +11,9 @@ using namespace std;
 
 class test_usermanager{
     public:
-        test_usermanager():p(new UserManager()){}
-        test_usermanager(UserManager *p):p(p){}
-        UserManager* p;
+        test_usermanager():p(new UserRecord()){}
+        test_usermanager(UserRecord *p):p(p){}
+        UserRecord* p;
         void close_database(){
             p->database.close();
         }
@@ -22,25 +22,23 @@ class test_usermanager{
         }
 };
 void test_passing_customer(Customer u){
-    cout<<u.get_user_name();
+    cout<<u.username();
 }
 int main(int argc,char** argv){
 
     database_clean::parse_argument(argc,argv);
     try{
         {
-            auto& manager = UserManager::getInstance();
+            auto& manager = UserRecord::get_record();
             test_usermanager middle(&manager);
-            ASSERT(manager.register_(customer,"aaaa","123456")==true,"aaaa register error");
-            auto u = manager.login("aaaa","123456");
+            ASSERT(User::register_(customer,"aaaa","123456")==true,"aaaa register error");
+            auto u = User::login("aaaa","123456");
             ASSERT(u!=nullptr,"login failed");
             ASSERT(u->get_user_type()==customer,"类别错误");
-            ASSERT(u->get_user_name()==string("aaaa"),"名字错误");
-            auto u2 = manager.login("aaaa","123456");
-            ASSERT(*u==*u2,"登录管理有问题");
-            ASSERT(manager.register_(seller,"bbbb","123456")==true,"bbbb register error");
-            ASSERT(manager.register_(customer,"cccc","123456")==true,"cccc register error");
-            ASSERT(manager.register_(customer,"dddd","123456")==true,"dddd register error");
+            ASSERT(u->username()==string("aaaa"),"名字错误");
+            ASSERT(User::register_(seller,"bbbb","123456")==true,"bbbb register error");
+            ASSERT(User::register_(customer,"cccc","123456")==true,"cccc register error");
+            ASSERT(User::register_(customer,"dddd","123456")==true,"dddd register error");
             manager.remove("bbbb");
             manager.remove(3);
             middle.close_database();
@@ -52,17 +50,12 @@ int main(int argc,char** argv){
             cout<<"load 正常"<<endl;
             // manager.database.close();
         }
-        {
-            auto& manager = UserManager::getInstance();
-            auto u = manager.login("aaaa","123456");
-            test_passing_customer(*((Customer*)u.get()));
-            ASSERT(u->get_user_name()==string("aaaa"),"传递参数时被删除");
-        }
     }catch(const char*err){
         cerr<<err<<endl;
         database_clean::remove_database();
         return -1;
     }
+    cout<<"测试正常退出"<<endl;
     database_clean::remove_database();
     return 0;
 

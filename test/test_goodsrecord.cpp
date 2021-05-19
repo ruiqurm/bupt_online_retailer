@@ -27,6 +27,9 @@ int main(int argc,char**argv){
                 {"bbbb",2.0,1,goods_type::Clothes,1,"11111"},
                 {"cccc",2.0,1,goods_type::Clothes,1,"11111"},
                 {"dddd",2.0,1,goods_type::Clothes,1,"11111"},
+                {"eeee",2.0,1,goods_type::Clothes,1,"11111"},
+                {"ffff",2.0,1,goods_type::Clothes,1,"11111"},
+
             };
             for(int i=0;i<4;i++){
                 record.set(data[i]);
