@@ -1,8 +1,13 @@
 #pragma once
 #include"user.h"
 #include"concreteGoods.h"
-
-class Seller:public UserTemplate<seller,Seller>{
+namespace USER_TYPE{
+enum{
+    customer,
+    seller
+};
+}
+class Seller:public UserTemplate<USER_TYPE::seller,Seller>{
     public:
         Seller(const UserData& p):UserTemplate(p),has_load_goods(false){}
         int get_user_type()const override{
@@ -25,7 +30,7 @@ class Seller:public UserTemplate<seller,Seller>{
         bool has_load_goods;
 };
 
-class Customer:public UserTemplate<customer,Customer>{
+class Customer:public UserTemplate<USER_TYPE::customer,Customer>{
     public:
         Customer(const UserData& p):UserTemplate(p){}
         int get_user_type()const override{

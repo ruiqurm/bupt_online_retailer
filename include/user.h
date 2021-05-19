@@ -11,10 +11,7 @@
 using std::string;
 using std::ostream;
 using std::shared_ptr;
-enum USER_TYPE{
-    customer=0,
-    seller=1
-};
+
 class UserData{
     public:
         // char username[32];
@@ -39,13 +36,14 @@ class User{
         
         //登录与注册
         static std::unique_ptr<User> login(const string& username,const string& password);
-        static bool register_(USER_TYPE type,const string& username,const string& password);
+        static bool register_(int type,const string& username,const string& password);
         
-        // bool change_password(const string&password){
-        //     if(!validate_password)"throw password syntax error";
-        //     auto& record = UserRecord::get_record();
-        //     record.
-        // }
+        bool change_password(const string&pre_pass,const string&after_pass){
+            if(pre_pass!=data->password)throw"password incorrect";
+            if(!validate_password(after_pass))throw "password syntax error";
+            data->password.assign(after_pass);
+            return save();
+        }
         const string& username()const{return data->username;}
         int balance()const{return data->balance;}
         int id()const{return data->id;}
@@ -58,6 +56,7 @@ class User{
         static bool validate_password(const string&password){
             return std::regex_match(password,PASSWORD_PATTERN);
         }
+        bool save();
     protected:
         User(const UserData& p):data(std::make_unique<UserData>(p)){}
         std::unique_ptr<UserData> data;
@@ -83,11 +82,12 @@ class UserTemplate: public User{
       UserTemplate(const UserData& p):User(p) { _TYPE = USER_TYPE_ID; } 
 };
 
-#ifdef MY_DEBUG
+#if DEBUG==1
 class test_usermanager;
 #endif
+
 class UserRecord final{
-    #ifdef MY_DEBUG
+    #if DEBUG==1
         friend class test_usermanager;
     #endif
     public:
@@ -98,19 +98,16 @@ class UserRecord final{
             return manager;
         }
         
-        void set(USER_TYPE type,const string& username,const string& password);
+        void set(int type,const string& username,const string& password);
+        bool update(const UserData&data);
         UserData* get(const std::string&username);
         void remove(int id);
         void remove(const std::string& username);
-        
+        void clear();
         std::unique_ptr<User> create_user(uint16_t msgid,const UserData& data){
             return register_types[msgid](data);
         }
-        unsigned short register_type(unsigned short id, p_user_construct factoryMethod){
-            printf("Registering constructor for user id %d\n", id);
-            register_types[id] = factoryMethod;
-            return id;
-        }
+        unsigned short register_type(unsigned short id, p_user_construct factoryMethod);
         int load();
         static constexpr const char* USER_FILE_NAME="user-record.txt";
     
@@ -127,7 +124,6 @@ class UserRecord final{
         */
         std::map<std::string,UserData> name_to_data;
         std::map<int,std::string> pk_to_name;
-        
         int max_pk;
 
         /*
@@ -178,12 +174,6 @@ inline void UserRecord::insert_data(const UserData&data){
     database<<data.id<<" "<<data.username<<" "<<data.password<<" "<<data.balance<<" "<<data.type<<"\0\0\0";
     write_LF_nth_line(data.id);
 }
-// inline void UserRecord::in(const UserData&data){
-//     if(data.id<=0)return;
-//     set_write_cursor_to_nth_line(data.id);
-//     database<<data.id<<" "<<data.username<<" "<<data.password<<" "<<data.balance<<" "<<data.type<<"\0\0\0";
-//     write_LF_nth_line(data.id);
-// }
 inline void UserRecord::remove_data(int id){
     if(id<=0)return;
     //不判断是否存在了.

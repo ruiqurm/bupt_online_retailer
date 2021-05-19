@@ -4,7 +4,7 @@
 #include<iostream>
 #include<fstream>
 #include<map>
-#define MY_DEBUG
+#define DEBUG 1
 #include "user.h"
 #include"concreteUser.h"
 using namespace std;
@@ -31,14 +31,14 @@ int main(int argc,char** argv){
         {
             auto& manager = UserRecord::get_record();
             test_usermanager middle(&manager);
-            ASSERT(User::register_(customer,"aaaa","123456")==true,"aaaa register error");
+            ASSERT(User::register_(USER_TYPE::customer,"aaaa","123456")==true,"aaaa register error");
             auto u = User::login("aaaa","123456");
             ASSERT(u!=nullptr,"login failed");
-            ASSERT(u->get_user_type()==customer,"类别错误");
+            ASSERT(u->get_user_type()==USER_TYPE::customer,"类别错误");
             ASSERT(u->username()==string("aaaa"),"名字错误");
-            ASSERT(User::register_(seller,"bbbb","123456")==true,"bbbb register error");
-            ASSERT(User::register_(customer,"cccc","123456")==true,"cccc register error");
-            ASSERT(User::register_(customer,"dddd","123456")==true,"dddd register error");
+            ASSERT(User::register_(USER_TYPE::seller,"bbbb","123456")==true,"bbbb register error");
+            ASSERT(User::register_(USER_TYPE::customer,"cccc","123456")==true,"cccc register error");
+            ASSERT(User::register_(USER_TYPE::customer,"dddd","123456")==true,"dddd register error");
             manager.remove("bbbb");
             manager.remove(3);
             middle.close_database();
@@ -49,6 +49,25 @@ int main(int argc,char** argv){
             ASSERT(tmp!=middle.name_to_data().end() && tmp->second.id==1,"读取文件错误");
             cout<<"load 正常"<<endl;
             // manager.database.close();
+        }
+        {
+            //测试修改密码
+            
+            //直接使用数据库
+            auto& record = UserRecord::get_record();
+            record.clear();
+            UserData d(0,"aaaa","123456",0,USER_TYPE::customer);
+            record.set(USER_TYPE::customer,"aaaa","123456");
+            
+            auto it = record.get("aaaa");
+            ASSERT(it->password!="1234567","指针错误");
+            d.password="1234567";
+            d.id = it->id;
+            cout<<record.update(d)<<endl;
+            ASSERT(it->password=="1234567","无法修改数据");
+            
+
+            // record.update
         }
     }catch(const char*err){
         cerr<<err<<endl;

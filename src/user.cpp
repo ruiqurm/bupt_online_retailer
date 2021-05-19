@@ -7,7 +7,7 @@ const std::regex User::PASSWORD_PATTERN = std::regex("^[\\w,-_,!@#$%^&*()]{4,16}
 /*
 * 
 */
-bool User::register_(USER_TYPE type,const string& username,const string& password){
+bool User::register_(int type,const string& username,const string& password){
     auto& record = UserRecord::get_record();
     if (record.get(username)){
         return false;
@@ -54,12 +54,39 @@ int UserRecord::load(){
     }
     return count;
 }
-void UserRecord::set(USER_TYPE type,const string& username,const string& password){
+void UserRecord::set(int type,const string& username,const string& password){
     max_pk++;
     UserData data(max_pk,username.c_str(),password.c_str(),0,type);
     name_to_data.emplace(username,data);
     pk_to_name.emplace(max_pk,username);
     insert_data(data);
+}
+bool UserRecord::update(const UserData&data){
+    auto it = name_to_data.find(data.username);
+    if(it!=name_to_data.end()){
+        if(data.id!=it->second.id)return false;//尝试修改id
+        it->second = data;
+        set_write_cursor_to_nth_line(data.id);
+        insert_data(data);
+        write_LF_nth_line(data.id);
+        return true;
+    }
+    return false;
+}
+unsigned short UserRecord::register_type(unsigned short id, p_user_construct factoryMethod){
+    printf("Registering constructor for user id %d\n", id);
+    register_types[id] = factoryMethod;
+    return id;
+}
+
+void UserRecord::clear(){
+    name_to_data.clear();
+    pk_to_name.clear();
+    max_pk = 0;
+    database.close();
+    database.open(USER_FILE_NAME,std::ios::out);
+    database.close();
+    database.open(USER_FILE_NAME,std::ios::in|std::ios::out);
 }
 std::unique_ptr<User> User::login(const string& username,const string& password){
     auto& record = UserRecord::get_record();
@@ -71,6 +98,10 @@ std::unique_ptr<User> User::login(const string& username,const string& password)
         throw "password error";
     }
     return record.create_user(data->type,*data);
+}
+bool User::save(){
+    auto &record = UserRecord::get_record();
+    return record.update(*data);
 }
 // UserRecord::UserRecord(){
 //     if (file_exist(USER_FILE_NAME)){
