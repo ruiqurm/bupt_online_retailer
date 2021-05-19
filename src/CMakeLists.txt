@@ -4,5 +4,5 @@ set(CMAKE_CXX_FLAGS,"-Wall")
 
 add_library(database STATIC database.cpp)
 add_library(users STATIC user.cpp)
-add_library(goods STATIC goods database)
+add_library(goods STATIC goods user database)
 

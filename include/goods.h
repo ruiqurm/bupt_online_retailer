@@ -3,7 +3,8 @@
 #include<vector>
 #include<memory>
 #include"database.h"
-// #include"user.h"
+#include"user.h"
+
 using std::string;
 
 class GoodsData{
@@ -50,46 +51,24 @@ class GoodsFactory{
 };
 
 template <>
-const char MetaRecord<Goods,GoodsData>::TABLE_NAME[] ="GOODS";
+constexpr char MetaRecord<Goods,GoodsData>::TABLE_NAME[] ="GOODS";
 
 class GoodsRecord: public MetaRecord<Goods,GoodsData>{
     public:
+        typedef std::unique_ptr<std::vector<std::shared_ptr<Goods>>> pGoodsVec;
         static GoodsRecord& get_record(){
             static GoodsRecord record;
             return record;
         }
         GoodsRecord(const GoodsRecord&)=delete;//禁止拷贝构造
-        GoodsRecord(){
-            static const char sql[]= "CREATE TABLE GOODS("  \
-                                        "ID INTEGER PRIMARY KEY AUTOINCREMENT," \
-                                        "NAME           CHAR(64)    NOT NULL," \
-                                        "PRICE          FLOAT       NOT NULL," \
-                                        "SELLER         INT         NOT NULL," \
-                                        "TYPE           INT         NOT NULL," \
-                                        "REMAIN         INT         NOT NULL," \
-                                        "DESCRIPTION    TEXT        NOT NULL)" \
-                                        "UNIQUE (NAME,SELLER) ON CONFLICT REPLACE;";
-            Database::exec(db,sql,nullptr,nullptr);
-        }
-        std::shared_ptr<Goods> get(int id){
-            static const char sql[] = "SELECT * FROM %s WHERE ID=%d";
-            static char buffer[48]; 
-            GoodsData goods;
+        
+        std::shared_ptr<Goods> get(int id);
 
-            snprintf(buffer,48,sql,TABLE_NAME,id);
-            Database::exec(db,buffer,fetch_in_struct,&goods);
-            return GoodsFactory::get_goods(goods);
-        }
-        std::vector<std::shared_ptr<Goods>> get_user_goods(int seller_id){
-            static const char sql[] =  "SELECT * FROM %s WHERE SELLER=%d";
-            static char buffer[48];
-            std::vector<std::shared_ptr<Goods>>vec;
-            snprintf(buffer,48,sql,TABLE_NAME,seller_id);
-            Database::exec(db,buffer,fetch_in_vector,&vec);
-            return vec;
-        }
+        pGoodsVec get_user_goods(int seller_id);
         
     protected:
+        GoodsRecord();
+
         void _data_to_string(char buffer[],const GoodsData& data){
             static const char sql[] =  "INSERT INTO %s (NAME,PRICE,SELLER,TYPE,REMAIN,DESCRIPTION) VALUES ('%s', %f, %d ,%d,%d,'%s'); ";
             snprintf(buffer,512,sql,TABLE_NAME,data.name.c_str(),data.price,data.seller,data.type,data.remain,data.description.c_str());
@@ -107,13 +86,13 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
             return 0;
         }
         static int fetch_in_vector(void*_data, int argc, char **argv, char **azColName){
-            typedef std::vector<std::shared_ptr<Goods>> data_type;
             GoodsData data(atoi(argv[0]),argv[1],atof(argv[2]),atoi(argv[3]),atoi(argv[4]),atoi(argv[5]),argv[6]);
-            data_type*pvec = (data_type*)_data;
-            pvec->push_back(GoodsFactory::get_goods(data));
+            auto& vec = *(std::vector<std::shared_ptr<Goods>>*)_data;
+            vec.push_back(GoodsFactory::get_goods(data));
             return 0;
         }
-    // private:
+    private:
+        const UserManager& manager;
         
 };
 

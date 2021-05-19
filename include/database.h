@@ -6,6 +6,8 @@
 #include<string>
 #include<cstdlib>
 #include<memory>
+#include<vector>
+// #include<for
 #include<sqlite3.h>
 // #pragma comment(lib,"sqlite3.lib")
 class Database{
@@ -54,6 +56,9 @@ class MetaRecord{//通用基类
             _data_to_string(buffer,data);
             Database::exec(db,buffer,nullptr,nullptr);
             return sqlite3_last_insert_rowid(db);
+        }
+        int set_many(std::vector<T_data*> datas){
+
         }
         void remove(int id){
             static const char sql[] = "DELETE FROM %s WHERE ID = %d; ";
