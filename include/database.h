@@ -9,7 +9,7 @@
 #include<vector>
 // #include<for
 #include<sqlite3.h>
-// #pragma comment(lib,"sqlite3.lib")
+#pragma comment(lib,"sqlite3.lib")
 class Database{
     public:
         static sqlite3* get_db(){
@@ -57,9 +57,9 @@ class MetaRecord{//通用基类
             Database::exec(db,buffer,nullptr,nullptr);
             return sqlite3_last_insert_rowid(db);
         }
-        int set_many(std::vector<T_data*> datas){
+        // int set_many(std::vector<T_data*> datas){
 
-        }
+        // }
         void remove(int id){
             static const char sql[] = "DELETE FROM %s WHERE ID = %d; ";
             static char buffer[256]; //可能缓冲区溢出？

@@ -25,8 +25,7 @@ void test_passing_customer(Customer u){
     cout<<u.username();
 }
 int main(int argc,char** argv){
-
-    database_clean::parse_argument(argc,argv);
+    init(argc,argv);
     try{
         {
             auto& manager = UserRecord::get_record();

@@ -31,6 +31,13 @@ using namespace std;
 //      */
 //     std::string msg_;
 // };
+void init(int argc,char**argv){
+    #ifdef WIN32
+    #include <cstdlib>
+    system("chcp 65001");
+    #endif
+    database_clean::parse_argument(argc,argv);
+}
 bool exist(const char* file) {
     return std::filesystem::exists(file);
 }

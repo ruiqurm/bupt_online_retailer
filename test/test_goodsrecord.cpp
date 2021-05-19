@@ -1,10 +1,11 @@
 #include"concreteGoods.h"
 #include"test.h"
 #include<iostream>
+
 using namespace std;
 
 int main(int argc,char**argv){
-    database_clean::parse_argument(argc,argv);
+    init(argc,argv);
     try
     {
         {
