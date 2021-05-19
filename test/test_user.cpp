@@ -66,7 +66,11 @@ int main(int argc,char** argv){
             cout<<record.update(d)<<endl;
             ASSERT(it->password=="1234567","无法修改数据");
             
-
+            ASSERT(User::register_(USER_TYPE::customer,"bbbb","123456")==true,"bbbb register error");
+            auto u = User::login("bbbb","123456");
+            ASSERT(u->change_password("123456","1234567"),"无法修改密码");
+            auto it2 = record.get("bbbb");
+            ASSERT(it2->password=="1234567","无法修改数据");
             // record.update
         }
     }catch(const char*err){
