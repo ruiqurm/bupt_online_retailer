@@ -1,6 +1,6 @@
 #pragma once
 #include"user.h"
-#include"concreteGoods.h"
+#include"goods.h"
 namespace USER_TYPE{
 enum{
     customer,
@@ -9,12 +9,14 @@ enum{
 }
 class Seller:public UserTemplate<USER_TYPE::seller,Seller>{
     public:
-        Seller(const UserData& p):UserTemplate(p),has_load_goods(false){}
+        Seller(UserData* p):UserTemplate(p),has_load_goods(false){}
         int get_user_type()const override{
             return _TYPE;
         }
-        void add_goods(const Goods& g){
-
+        void add_goods(GoodsData g){
+            auto& record = GoodsRecord::get_record();
+            g.seller = data->id;
+            record.set(g);
         }
         const std::vector<std::shared_ptr<Goods>>& goods(){
             if (!has_load_goods){
@@ -32,10 +34,11 @@ class Seller:public UserTemplate<USER_TYPE::seller,Seller>{
 
 class Customer:public UserTemplate<USER_TYPE::customer,Customer>{
     public:
-        Customer(const UserData& p):UserTemplate(p){}
+        Customer(UserData* p):UserTemplate(p){}
         int get_user_type()const override{
             return _TYPE;
         }
-        void buy();
+        int buy(Goods&,int num);
         ~Customer(){}
+
 };

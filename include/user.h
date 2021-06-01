@@ -4,7 +4,8 @@
 #include<memory>
 #include<regex>
 #include<map>
-#include <filesystem>
+// #include <filesystem>
+#include <sys/stat.h>
 #include"database.h"
 
 
@@ -19,15 +20,16 @@ class UserData{
         string username;
         string password;
         int id;
-        int balance;
+        double balance;
         int type;
         UserData(){}
         UserData(int id,const char*username,
-                const char*password,int balance,
+                const char*password,double balance,
                 int type):id(id),balance(balance),type(type),username(username),password(password){}
         UserData(int id,const string& username,
-        const string& password,int balance,
+        const string& password,double balance,
         int type):id(id),balance(balance),type(type),username(username),password(password){}
+        bool save();
 };
 class User{
     public:
@@ -35,7 +37,7 @@ class User{
         virtual int get_user_type()const=0;
         
         //登录与注册
-        static std::unique_ptr<User> login(const string& username,const string& password);
+        static std::shared_ptr<User> login(const string& username,const string& password);
         static bool register_(int type,const string& username,const string& password);
         
         bool change_password(const string&pre_pass,const string&after_pass){
@@ -45,21 +47,32 @@ class User{
             return save();
         }
         const string& username()const{return data->username;}
-        int balance()const{return data->balance;}
+        double deposit(double money){
+            data->balance+=money;
+            save();
+            return data->balance;
+        }
+        double& balance(){
+            return data->balance;
+        }        
+        const double& balance()const{return data->balance;}
         int id()const{return data->id;}
         bool operator==(const User& u)const{
             return data==u.data;
         }
-        static bool validate_username(const string&username){
+        bool validate_password(const string&password){
+            return (data->password == password);
+        }
+        static bool validate_username_format(const string&username){
             return std::regex_match(username,USERNAME_PATTERN);
         }
-        static bool validate_password(const string&password){
+        static bool validate_password_format(const string&password){
             return std::regex_match(password,PASSWORD_PATTERN);
         }
         bool save();
     protected:
-        User(const UserData& p):data(std::make_unique<UserData>(p)){}
-        std::unique_ptr<UserData> data;
+        User(UserData* p):data(p){}
+        UserData* data;
         unsigned short _TYPE;
     private:
         static const std::regex USERNAME_PATTERN;
@@ -75,11 +88,14 @@ class UserTemplate: public User{
    
    enum {_USER_TYPE_ID = TYPE };
    public:
-        static std::unique_ptr<User> instance(const UserData& data) { return std::make_unique<IMPL>(data);}
+        static std::shared_ptr<User> instance(UserData* data) { return std::make_shared<IMPL>(data);}
         static const unsigned short USER_TYPE_ID; 
+        static std::shared_ptr<IMPL> cast(std::shared_ptr<User>u){
+            return std::dynamic_pointer_cast<IMPL>(u);
+        }
         // static void Enable() { volatile uint16_t x =  }
    protected:
-      UserTemplate(const UserData& p):User(p) { _TYPE = USER_TYPE_ID; } 
+      UserTemplate(UserData* p):User(p) { _TYPE = USER_TYPE_ID; } 
 };
 
 #if DEBUG==1
@@ -91,7 +107,7 @@ class UserRecord final{
         friend class test_usermanager;
     #endif
     public:
-        typedef std::unique_ptr<User> (*p_user_construct)(const UserData &);
+        typedef std::shared_ptr<User> (*p_user_construct)(UserData *);
 
         static UserRecord& get_record(){
             static UserRecord manager;//单例模式
@@ -101,16 +117,22 @@ class UserRecord final{
         void set(int type,const string& username,const string& password);
         bool update(const UserData&data);
         UserData* get(const std::string&username);
+        UserData* get(int id);
+        string get_username(int id);
         void remove(int id);
         void remove(const std::string& username);
         void clear();
-        std::unique_ptr<User> create_user(uint16_t msgid,const UserData& data){
-            return register_types[msgid](data);
+        std::shared_ptr<User> create_user(UserData* data){
+            if(data==nullptr)return std::shared_ptr<User>(nullptr);
+            else return register_types[data->type](data);
         }
         unsigned short register_type(unsigned short id, p_user_construct factoryMethod);
         int load();
         static constexpr const char* USER_FILE_NAME="user-record.txt";
-    
+        bool exist (const std::string& name) {
+            struct stat buffer;   
+            return (stat (name.c_str(), &buffer) == 0); 
+        }
     private:
         UserRecord();
         ~UserRecord(){}
@@ -140,7 +162,11 @@ class UserRecord final{
             database.seekg((id-1)*(MAX_LINE));
         }
         void write_LF_nth_line(int id){
+            #ifdef WIN32
+            database.seekp(id*MAX_LINE -2);
+            #else
             database.seekp(id*MAX_LINE -1);
+            #endif
             database<<'\n';
         }
 };
@@ -157,7 +183,7 @@ const unsigned short UserTemplate<TYPE, IMPL>::USER_TYPE_ID = UserRecord::get_re
 */
 inline UserRecord::UserRecord(){
     
-    if (std::filesystem::exists(USER_FILE_NAME)){
+    if (exist(USER_FILE_NAME)){
         load();
         database.open(USER_FILE_NAME,std::ios::in|std::ios::out);
         //不会覆盖原来的内容
@@ -179,7 +205,7 @@ inline void UserRecord::remove_data(int id){
     //不判断是否存在了.
     set_write_cursor_to_nth_line(id);
     database<<"0\0";database.flush();
-    write_LF_nth_line(id);
+    // write_LF_nth_line(id);
 }
 inline void UserRecord::remove(int id){
     auto it = pk_to_name.find(id);
@@ -204,4 +230,14 @@ inline UserData* UserRecord::get(const string&username){
     return nullptr;
 }
 
-
+inline UserData* UserRecord::get(int id){
+    auto it = pk_to_name.find(id);
+    if(it!=pk_to_name.end()){
+        return get(it->second);
+    }
+    return nullptr;
+}
+inline string UserRecord::get_username(int id){
+    auto it =pk_to_name.find(id);
+    return (it!=pk_to_name.end())?it->second:string();
+}

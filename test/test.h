@@ -1,10 +1,9 @@
 #pragma once
 #include<iostream>
 #include<exception>
-#include<fstream>
-#include<map>
 #include<cstring>
-#include<filesystem>
+// #include<filesystem>
+#include<assert.h>
 using namespace std;
 #define ASSERT(bool_expression,hint) if(!(bool_expression)){throw hint;}
 
@@ -30,38 +29,40 @@ using namespace std;
 //     /** Error message.
 //      */
 //     std::string msg_;
+
+bool exist (const std::string& name) {
+    if (FILE *file = fopen(name.c_str(), "r")) {
+        fclose(file);
+        return true;
+    } else {
+        return false;
+    }   
+}
+// class database_clean{
+//     public:
+//         static void remove_database(){
+//             if(!if_clean)return;
+//             cout<<"Try to clean...\n";
+//             if (exist("user-record.txt")){
+//                 cout<<"Clean User-record.txt\n";
+//                 remove("user-record.txt");
+//             }
+//             if (exist("data.db")){
+//                 cout<<"Clean data.db"<<endl;
+//                 remove("data.db");
+//             }
+//         }
+//         static void parse_argument(int argc,char**argv){
+//             if(argc<1){
+//                 return;
+//             }
+//             for(int i=1;i<argc;i++){
+//                 if(!strcmp(argv[i],"-pd")){
+//                     if_clean=false;
+//                 }
+//             }
+//         }
+//         static bool if_clean;
 // };
-void init(int argc,char**argv){
-    #ifdef WIN32
-    #include <cstdlib>
-    system("chcp 65001");
-    #endif
-    database_clean::parse_argument(argc,argv);
-}
-bool exist(const char* file) {
-    return std::filesystem::exists(file);
-}
-class database_clean{
-    public:
-        static void remove_database(){
-            if(!if_clean)return;
-            if (exist("user-record.txt")){
-                remove("user-record.txt");
-            }
-            if (exist("data.db")){
-                remove("data.db");
-            }
-        }
-        static void parse_argument(int argc,char**argv){
-            if(argc<1){
-                return;
-            }
-            for(int i=1;i<argc;i++){
-                if(!strcmp(argv[i],"-pd")){
-                    if_clean=false;
-                }
-            }
-        }
-        static bool if_clean;
-};
-bool database_clean::if_clean=true;
+// bool database_clean::if_clean=true;
+

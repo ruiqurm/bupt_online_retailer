@@ -1,35 +1,36 @@
+#pragma once
 #include"goods.h"
 
-namespace goods_type{
+namespace GOODS_TYPE{
     enum{
         Books,
         Clothes
     };
 }
-class Books:public Goods{
+class Books:public GoodsTemplate<GOODS_TYPE::Books,Books>{
     public:
-        Books(const GoodsData&data):Goods(data){}
-        double get_price()override{
-            return data.price;
+        Books(const GoodsData&data):GoodsTemplate(data){}
+        double get_price(const GoodsContext& context)override{
+            return data.price*context.num();
+        }
+        int get_goods_type()const override{
+            return _TYPE;
         }
 };
 
-class Clothes:public Goods{
+class Clothes:public GoodsTemplate<GOODS_TYPE::Clothes,Clothes>{
     public:
-        Clothes(const GoodsData&data):Goods(data){}
-        double get_price()override{
-            return data.price;
+        Clothes(const GoodsData&data):GoodsTemplate(data){}
+        double get_price(const GoodsContext& context)override{
+            return data.price*context.num();
+        }
+        int get_goods_type()const override{
+            return _TYPE;
         }
 };
-std::shared_ptr<Goods> GoodsFactory::get_goods(const GoodsData& data){
-    switch (data.type)
-    {
-    case goods_type::Books:
-        return std::make_shared<Books>(data);
-    case goods_type::Clothes:
-        return std::make_shared<Clothes>(data);
-    default:
-        return nullptr;
-    }
-}
+// class GoodsFactory{
+//     public:
+//         static std::shared_ptr<Goods> get_goods(const GoodsData& data);
+// };
+
 

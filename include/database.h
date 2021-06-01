@@ -8,8 +8,7 @@
 #include<memory>
 #include<vector>
 // #include<for
-#include<sqlite3.h>
-#pragma comment(lib,"sqlite3.lib")
+#include"sqlite3.h"
 class Database{
     public:
         static sqlite3* get_db(){
@@ -18,7 +17,7 @@ class Database{
             sqlite3_open("data.db",&db);
             return db;
         }
-        static void exec(sqlite3 *db, const char *sql, 
+        static bool exec(sqlite3 *db, const char *sql, 
             int (*callback)(void *, int, char **, char **), 
             void *arg){
             char *errmsg=nullptr;
@@ -26,7 +25,9 @@ class Database{
             if( rc != SQLITE_OK ){
                 fprintf(stderr, "SQL error: %s\n", errmsg);
                 sqlite3_free(errmsg);
+                return false;
             }
+            return true;
         }
     protected:
         // static constexpr char database_name[] = "data.db";
@@ -53,13 +54,21 @@ class MetaRecord{//通用基类
         // void update_key(const string& key_name,const string key_value);
         int set(const T_data& data){
             static char buffer[512];
-            _data_to_string(buffer,data);
+            insert_data_to_string(buffer,data);
             Database::exec(db,buffer,nullptr,nullptr);
             return sqlite3_last_insert_rowid(db);
         }
         // int set_many(std::vector<T_data*> datas){
 
         // }
+        int size()const{
+            static const char sql[] = "SELECT COUNT(*) FROM %s";
+            static char buffer[48];
+            int tmp;
+            snprintf(buffer,48,sql,this->TABLE_NAME);
+            Database::exec(db,buffer,get_size,&tmp);
+            return tmp;
+        }
         void remove(int id){
             static const char sql[] = "DELETE FROM %s WHERE ID = %d; ";
             static char buffer[256]; //可能缓冲区溢出？
@@ -67,13 +76,24 @@ class MetaRecord{//通用基类
             sprintf(buffer,sql,this->TABLE_NAME,id);
             Database::exec(db,buffer,nullptr,nullptr);
         }
+        void clear(){
+            static const char sql[] = "DELETE FROM %s";
+            static char buffer[128];
+            sprintf(buffer,sql,this->TABLE_NAME);
+            Database::exec(db,buffer,nullptr,nullptr);
+        }
     protected:
         // 留给子类实现
         // virtual T_class _construct_object(const T_data)=0;
-        virtual void _data_to_string(char buffer[],const T_data&)=0;
+        virtual void insert_data_to_string(char buffer[],const T_data&)=0;
         static const char TABLE_NAME[];
         sqlite3 *db;
-
+    private:
+        static int get_size(void*_data, int argc, char **argv, char **azColName){
+            int*data = (int*)_data;
+            *data = atoi(argv[0]);
+            return 0;
+        }
 };
 
 // class GoodsRecord{

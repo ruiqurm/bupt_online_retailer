@@ -1,31 +1,17 @@
 cmake_minimum_required(VERSION 3.1.0)
 project(online_ratailers)
-
-if(LINUX)
-  SET(CMAKE_C_COMPILER /usr/bin/clang)
-  SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
-endif()
+# set (CMAKE_PREFIX_PATH "G:/qt/5.12.10/mingw73_64")
+# if(LINUX)
+#   SET(CMAKE_C_COMPILER /usr/bin/clang)
+#   SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
+# endif()
 set(CMAKE_CXX_STANDARD 17) # 使用c++17
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# link_directories(
+#   ${PROJECT_SOURCE_DIR}/external
+# )
 
 
-find_package (SQLite3)
-if (SQLITE3_FOUND)
-  include_directories(${SQLITE3_INCLUDE_DIRS})
-else()
-  #如果没有找到，那么把自己的文件复制进去
-  message(STATUS "Can't find sqlite3. Copy compiled files")
-  IF(LINUX)
-    file(COPY ${PROJECT_SOURCE_DIR}/external/libsqlite3.a DESTINATION ${CMAKE_BINARY_DIR}/src/ FOLLOW_SYMLINK_CHAIN)
-    file(COPY ${PROJECT_SOURCE_DIR}/external/libsqlite3.a DESTINATION ${CMAKE_BINARY_DIR}/test/ FOLLOW_SYMLINK_CHAIN)    
-MESSAGE(STATUS "current platform: Linux ")
-  ELSEIF (WIN32)
-    file(COPY ${PROJECT_SOURCE_DIR}/external/sqlite3.lib DESTINATION ${CMAKE_BINARY_DIR}/src/ FOLLOW_SYMLINK_CHAIN)
-    file(COPY ${PROJECT_SOURCE_DIR}/external/libsqlite3.a DESTINATION ${CMAKE_BINARY_DIR}/test/ FOLLOW_SYMLINK_CHAIN)
-    MESSAGE(STATUS "current platform: Windows")
-  ELSE()
-    MESSAGE(FATAL_ERROR "Not suitable sqlite3 lib")
-  endif()
-endif (SQLITE3_FOUND)
 
 #Generate the shared library from the library sources
 # add_library(online_ratailers SHARED 
@@ -38,14 +24,27 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include
 )
 
-############################################################
-# Create an executable
-############################################################
-
-# Add an executable with the above sources
 
 add_subdirectory(src)
-
+# add_subdirectory(ui)
 
 enable_testing()
 add_subdirectory(test)
+
+
+
+set (dist_gen_name ${CMAKE_BINARY_DIR}/dist)
+add_custom_target (generate
+    COMMAND ${CMAKE_COMMAND} -E  # 创建dist文件夹
+        make_directory ${dist_gen_name}
+    COMMAND ${CMAKE_COMMAND} -E  # 复制头文件
+        copy_directory ${PROJECT_SOURCE_DIR}/include ${dist_gen_name}/include
+    COMMAND ${CMAKE_COMMAND} -E  # 创建libs文件夹
+        make_directory ${dist_gen_name}/libs
+    COMMAND ${CMAKE_COMMAND} -E 
+        copy ${CMAKE_BINARY_DIR}/src/libbupt_online_ratailer_static.a ${dist_gen_name}/libs/
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+add_custom_target (gen_clean
+    COMMAND ${CMAKE_COMMAND} -E
+        remove_directory ${dist_gen_name}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})

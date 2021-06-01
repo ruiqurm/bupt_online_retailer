@@ -6599,7 +6599,7 @@ SQLITE_API int sqlite3_table_column_metadata(
   char const **pzDataType,    /* OUTPUT: Declared data type */
   char const **pzCollSeq,     /* OUTPUT: Collation sequence name */
   int *pNotNull,              /* OUTPUT: True if NOT NULL constraint exists */
-  int *pPrimaryKey,           /* OUTPUT: True if column part of id */
+  int *pPrimaryKey,           /* OUTPUT: True if column part of PK */
   int *pAutoinc               /* OUTPUT: True if column is auto-increment */
 );
 
@@ -10374,7 +10374,7 @@ SQLITE_API int sqlite3session_changeset(
 **     the from-table, a DELETE record is added to the session object.
 **
 **   <li> For each row (primary key) that exists in both tables, but features
-**     different non-id values in each, an UPDATE record is added to the
+**     different non-PK values in each, an UPDATE record is added to the
 **     session.
 ** </ul>
 **
@@ -10620,7 +10620,7 @@ SQLITE_API int sqlite3changeset_op(
 */
 SQLITE_API int sqlite3changeset_pk(
   sqlite3_changeset_iter *pIter,  /* Iterator object */
-  unsigned char **pabPK,          /* OUT: Array of boolean - true for id cols */
+  unsigned char **pabPK,          /* OUT: Array of boolean - true for PK cols */
   int *pnCol                      /* OUT: Number of entries in output array */
 );
 

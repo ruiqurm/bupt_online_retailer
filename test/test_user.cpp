@@ -25,7 +25,7 @@ void test_passing_customer(Customer u){
     cout<<u.username();
 }
 int main(int argc,char** argv){
-    init(argc,argv);
+    // database_clean::parse_argument(argc,argv);
     try{
         {
             auto& manager = UserRecord::get_record();
@@ -74,11 +74,11 @@ int main(int argc,char** argv){
         }
     }catch(const char*err){
         cerr<<err<<endl;
-        database_clean::remove_database();
+        // database_clean::remove_database();
         return -1;
     }
     cout<<"测试正常退出"<<endl;
-    database_clean::remove_database();
+    // database_clean::remove_database();
     return 0;
 
 }
