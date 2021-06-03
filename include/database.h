@@ -69,11 +69,12 @@ class MetaRecord{//通用基类
             Database::exec(db,buffer,get_size,&tmp);
             return tmp;
         }
-        void remove(int id){
+        virtual void remove(int id){
             static const char sql[] = "DELETE FROM %s WHERE ID = %d; ";
             static char buffer[256]; //可能缓冲区溢出？
-
+            
             sprintf(buffer,sql,this->TABLE_NAME,id);
+            puts(buffer);
             Database::exec(db,buffer,nullptr,nullptr);
         }
         void clear(){
@@ -96,16 +97,36 @@ class MetaRecord{//通用基类
         }
 };
 
-// class GoodsRecord{
+// struct SqlStatement{
 //     public:
-//         GoodsRecord();
-//         Goods get(int id);
-//         Goods get(const std::string& username);
-//         void set(GoodsData data);
-        
-//         void remove(const std::string& username);
-//         void remove(int id);
+//         enum{
+//             OR,
+//             AND,            
+
+//             GET,
+//             SET,
+//             UPDATE,
+//             DELETE,
+
+//             EQUAL,
+//             NO_EQUAL,
+//             LESS_THAN,
+//             LESS_EQUAL_THAN,
+//             BIGGER_THAN,
+//             BIGGER_EQUAL_THAN
+//         };
+//         explicit SqlStatement(int predicate,const char* database);
+
+//         void add_condition();
 //     private:
-//         static int fetch_in_struct(void*data, int argc, char **argv, char **azColName);
-//         sqlite3 *db;
+//         int predicate;
+//         string database;
+// };
+// class SimpleSql{
+//     //简单sql语句,支持
+//     private:
+        
+// };
+// class Stringify{
+    
 // };

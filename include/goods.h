@@ -3,6 +3,7 @@
 #include<vector>
 #include<memory>
 #include<ctime>
+#include<set>
 #include"database.h"
 #include"user.h"
 
@@ -14,6 +15,8 @@ class GoodsData{
         GoodsData(int id,const char name[],double price,int seller,int type,int remain,const char description[]):
             id(id),name(name),price(price),seller(seller),type(type),remain(remain),description(description){}
         GoodsData(const char name[],double price,int seller,int type,int remain,const char description[]):
+            id(0),name(name),price(price),seller(seller),type(type),remain(remain),description(description){}
+        explicit GoodsData(const string&name,double price,int seller,int type,int remain,const string &description):
             id(0),name(name),price(price),seller(seller),type(type),remain(remain),description(description){}
         string name;
         string description;
@@ -86,6 +89,7 @@ constexpr char MetaRecord<Goods,GoodsData>::TABLE_NAME[];
 
 class GoodsRecord: public MetaRecord<Goods,GoodsData>{
     public:
+    
         typedef std::unique_ptr<std::vector<std::shared_ptr<Goods>>> pGoodsVec;
         typedef std::shared_ptr<Goods> (*p_goods_construct)(const GoodsData&data);
         static GoodsRecord& get_record(){
@@ -96,8 +100,12 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
         
         std::shared_ptr<Goods> get(int id);
         bool update(const GoodsData&);
+        // bool update(map<string,>)
         pGoodsVec get_user_goods(int seller_id);
         pGoodsVec get_all_goods();
+        // https://stackoverflow.com/questions/28888375/run-a-query-with-a-limit-offset-and-also-get-the-total-number-of-rows
+
+
         pGoodsVec get_goods_by_name(const string& search_for_name);
         //按输入的字符串搜索.采用模糊搜索
         void clear(){
@@ -110,8 +118,9 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
             GoodsRecord::register_types[id] =factoryMethod;
             return id;
         }
-        
+        void remove(int id)override;        
     protected:
+        // using _remove= MetaRecord<Goods,GoodsData>::remove;
         GoodsRecord();
 
         void insert_data_to_string(char buffer[],const GoodsData& data){
@@ -245,13 +254,99 @@ class TransactionRecord: public MetaRecord<Transaction,TransactionData>{
 
 class GoodsContext{
     public:
-        GoodsContext(const Goods* g,const int num,const User* u):
-            _num(num),p_goods(g),p_user(u){}
-        const User& user()const{return *p_user;}
-        const Goods& goods()const{return *p_goods;}
-        const int num()const{return _num;}
+        GoodsContext(Goods* g,int num,User* u):
+            _num(num),p_goods(g),p_user(u){ }
+        User& user()const{return *p_user;}
+        Goods& goods()const{return *p_goods;}
+        int num()const{return _num;}
+        void add_price(double p){
+            total_price += p;
+        }
     private:
-        const Goods* p_goods;
-        const User* p_user;
-        const int _num;
+        // std::map<int,std::pair<int,double>> price;
+        double total_price;
+        int _num;
+        Goods* p_goods;
+        User* p_user;
 };//购买上下文
+
+class Discount{
+    public:
+        enum{
+            DISCOUNT, /*单品打折*/
+            OFF, /*单品满减*/
+            /*预留*/
+
+            TYPE_DISCOUNT = 16, /*同品打折*/
+            /*TYPE_OFF, *//*同品满减*/
+            /*预留*/
+
+            TOTAL_DISCOUNT = 32,/*全单打折*/
+            TOTAL_OFF /*全单满减*/
+        };
+        Discount(int id,unsigned char type,int operand,double discount,double threshold=-1):
+            _id(id),_type(type),_operand(operand),_discount(discount),_threshold(threshold){}
+    virtual double price(const GoodsContext&context)=0;//鉴定客户的折扣价格
+        int id(){return _id;}
+        double discount(){return _discount;}
+        int operand(){return _operand;}
+        double threshold(){return _threshold;}
+        unsigned char type(){return _type;}
+    protected:
+        int _id;
+        unsigned char _type;
+        int _operand;//操作数
+        double _discount;//打折数或者满减数
+        double _threshold;//阈值
+};//打折策略
+
+typedef std::unique_ptr<std::vector<std::shared_ptr<Discount>>> pDisVec;
+class DiscountSimple:public Discount{
+    public:
+        DiscountSimple(int id,unsigned char type,int operand,double discount,double threshold=-1):
+            Discount(id,type,operand,discount,threshold){}
+        double price(const GoodsContext&context)override{
+            if ((_threshold>0&& context.goods().price() * context.num() >_threshold) || (_threshold<=0)){
+                return context.goods().price() *context.num()*  _discount;
+            }else{
+                return context.goods().price();
+            }
+        }
+};
+
+class DiscountCategory:public Discount{
+    public:
+        DiscountCategory(int id,unsigned char type,int operand,double discount,double threshold=-1):
+            Discount(id,type,operand,discount,threshold){}
+        double price(const GoodsContext&context)override{
+            if ((_threshold>0&&context.goods().price()*context.num()>_threshold) || (_threshold<=0)){
+                return context.goods().price() *context.num()* _discount;
+            }else{
+                return context.goods().price();
+            }
+        }
+};
+
+class DiscountRecord{
+    public:
+        static DiscountRecord& get_record(){
+            static DiscountRecord record;
+            return record;
+        }
+        DiscountRecord(const DiscountRecord&)=delete;//禁止拷贝造
+        
+        //创建一条折扣
+        bool make_discount(unsigned char type,int operand,double discount,double threshold=-1);
+        void update_discount(int id,double discount,double thresold);
+        std::shared_ptr<Discount> get_category_discount(int category);
+        std::shared_ptr<Discount> get_goods_discount(int goods_id);
+        pDisVec get_all_category_discount();
+        void remove_by_goods(int goods_id);
+        void remove(int id);
+    protected:
+        DiscountRecord();
+        static int fetch_to_object(void*_data, int argc, char **argv, char **azColName);
+        static int fetch_to_vector(void*_data, int argc, char **argv, char **azColName);
+    private:
+        sqlite3 *db;
+};

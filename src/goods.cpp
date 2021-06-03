@@ -80,8 +80,9 @@ GoodsRecord::pGoodsVec GoodsRecord::get_user_goods(int seller_id){
     Database::exec(db,buffer,fetch_in_vector,pvec.get());
     return pvec;
 }
+
 GoodsRecord::pGoodsVec GoodsRecord::get_all_goods(){
-    static const char sql[] =  "SELECT * FROM %s";
+    static const char sql[] =  "SELECT * FROM %s LIMIT 20";
     static char buffer[48];
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
     snprintf(buffer,48,sql,TABLE_NAME);
@@ -109,7 +110,11 @@ bool GoodsRecord::update(const GoodsData& data){
     snprintf(buffer,512,sql,TABLE_NAME,data.name.c_str(),data.price,data.seller,data.remain,data.description.c_str(),data.id);
     return Database::exec(db,buffer,nullptr,nullptr);
 }
-
+void GoodsRecord::remove(int id){
+    auto& record = DiscountRecord::get_record();
+    record.remove_by_goods(id);
+    MetaRecord<Goods,GoodsData>::remove(id);
+}
 /**
  * 
  * 
@@ -159,4 +164,124 @@ int Transaction::make_transaction(int from,int to,string goodsName,int goodsID,d
 std::shared_ptr<Goods> Transaction::goods()const{
     auto& record = GoodsRecord::get_record();
     return record.get(data.goodsID);
+}
+
+
+/*
+*
+* Discount
+*
+*/
+bool DiscountRecord::make_discount(unsigned char type,int operand,double discount,double threshold){
+        static char buffer[192];
+        static const char sql[] = "INSERT INTO _DISCOUNT (TYPE,OPERAND,DISCOUNT,THRESHOLD) VALUES(%d ,%d,%f, %f); ";
+        sprintf(buffer,sql,type,operand,discount,threshold);
+        Database::exec(db,buffer,nullptr,nullptr);
+        return true;
+}
+void DiscountRecord::update_discount(int id,double discount,double thresold){
+    static char buffer[192];
+    
+    static const char sql[] = "UPDATE _DISCOUNT SET DISCOUNT = %f,THRESHOLD=%f WHERE ID=%d;";
+    sprintf(buffer,sql,discount,thresold,id);
+    // puts(buffer);
+    Database::exec(db,buffer,nullptr,nullptr);
+}
+
+std::shared_ptr<Discount> DiscountRecord::get_category_discount(int category){
+    static char buffer[192];
+    static const char sql[] = "SELECT * FROM _DISCOUNT WHERE TYPE = %d AND OPERAND = %d;";
+    sprintf(buffer,sql,Discount::TYPE_DISCOUNT,category);
+    Discount* tmp=nullptr;
+    Database::exec(db,buffer,fetch_to_object,&tmp);
+    // std::cout<<tmp->id()<<" "<<tmp->discount()<<std::endl;
+    return std::shared_ptr<Discount>(tmp);
+}
+pDisVec DiscountRecord::get_all_category_discount(){
+    static char buffer[192];
+    static const char sql[] = "SELECT * FROM _DISCOUNT WHERE TYPE = %d;";
+    sprintf(buffer,sql,Discount::TYPE_DISCOUNT);
+    auto pvec = std::make_unique<std::vector<std::shared_ptr<Discount>>>();
+    Database::exec(db,buffer,fetch_to_vector,&pvec);
+    // std::cout<<tmp->id()<<" "<<tmp->discount()<<std::endl;
+    return pvec;
+}
+std::shared_ptr<Discount> DiscountRecord::get_goods_discount(int goods_id){
+    static char buffer[192];
+    static const char sql[] = "SELECT * FROM _DISCOUNT WHERE TYPE = %d AND OPERAND = %d;";
+    auto pvec = std::make_unique<std::vector<std::shared_ptr<Discount>>>();
+    sprintf(buffer,sql,Discount::DISCOUNT,goods_id);
+    // puts(buffer);
+    
+    Discount* tmp=nullptr;
+    Database::exec(db,buffer,fetch_to_object,&tmp);
+        // std::cout<<tmp->id()<<" "<<tmp->discount()<<std::endl;
+
+
+    return std::shared_ptr<Discount>(tmp);
+}
+DiscountRecord::DiscountRecord():db(Database::get_db()){
+    static const char sql[]= "CREATE TABLE _DISCOUNT("  \
+                    "ID INTEGER PRIMARY KEY AUTOINCREMENT," \
+                    "TYPE            INT    NOT NULL," \
+                    "OPERAND         INT       NOT NULL," \
+                    "DISCOUNT        FLOAT         NOT NULL," \
+                    "THRESHOLD       FLOAT         NOT NULL," \
+                    "UNIQUE(TYPE,OPERAND) ON CONFLICT REPLACE );";
+    Database::exec(db,sql,nullptr,nullptr);
+}
+
+int DiscountRecord::fetch_to_object(void*_data, int argc, char **argv, char **azColName){
+    if(argc!=5){
+        (*(Discount**)_data) = nullptr;
+        return -1;
+    }
+    
+    int type = atoi(argv[1]);
+    switch (type){
+    case Discount::DISCOUNT:
+        (*(Discount**)_data) = new DiscountSimple(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]),atof(argv[3]),atof(argv[4]));
+        break;
+    case Discount::TYPE_DISCOUNT:
+        (*(Discount**)_data)  =  new DiscountCategory(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]),atof(argv[3]),atof(argv[4]));
+        break;
+    default:
+        (*(Discount**)_data) = nullptr;
+        break;
+    }
+    return 0;
+}
+int DiscountRecord::fetch_to_vector(void*_data, int argc, char **argv, char **azColName){
+        if(argc!=5){
+        (*(Discount**)_data) = nullptr;
+        return -1;
+    }
+    auto& vec = *(std::unique_ptr<std::vector<std::shared_ptr<Discount>>>*)_data;
+    int type = atoi(argv[1]);
+    switch (type){
+    case Discount::DISCOUNT:
+
+        vec->emplace_back(std::make_shared<DiscountSimple>(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]),atof(argv[3]),atof(argv[4])));
+        break;
+    case Discount::TYPE_DISCOUNT:
+        vec->emplace_back(std::make_shared<DiscountCategory>(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]),atof(argv[3]),atof(argv[4])));
+        break;
+    default:
+
+
+        break;
+    }
+    return 0;
+}
+void DiscountRecord::remove(int id){
+    static char buffer[192];
+    static const char sql[] = "DELETE FROM _DISCOUNT WHERE ID=%d;";
+    sprintf(buffer,sql,id);
+    Database::exec(db,sql,nullptr,nullptr);
+}
+void DiscountRecord::remove_by_goods(int goods_id){
+    static char buffer[192];
+    static const char sql[] = "DELETE FROM _DISCOUNT WHERE TYPE=%d AND OPERAND=%d;";
+    sprintf(buffer,sql,Discount::DISCOUNT,goods_id);
+    Database::exec(db,buffer,nullptr,nullptr);
 }

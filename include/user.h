@@ -46,7 +46,10 @@ class User{
             data->password.assign(after_pass);
             return save();
         }
+        string& password(){return data->password;}
+        const string& password()const{return data->password;}
         const string& username()const{return data->username;}
+        string& username(){return data->username;}
         double deposit(double money){
             data->balance+=money;
             save();
