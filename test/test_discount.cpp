@@ -13,7 +13,7 @@ int main(){
                            {"Effective C++",100,seller1->id(),GOODS_TYPE::Books,10,"c++:从入门到入土"},
                            {"More Effective C++",100,seller1->id(),GOODS_TYPE::Books,10,"c++:从入门到入土"},
                            {"卫衣",100,seller1->id(),GOODS_TYPE::Clothes,20,"一件普通的卫衣"},
-                           {"T-shirt",100,seller1->id(),GOODS_TYPE::Books,10,"一件普通的T-shirt"}};
+                           {"T-shirt",100,seller1->id(),GOODS_TYPE::Clothes,10,"一件普通的T-shirt"}};
     seller1->add_goods(goods[0]);
     seller1->add_goods(goods[1]);
     seller1->add_goods(goods[2]);
@@ -104,7 +104,26 @@ int main(){
     }
     goodsrecord.remove(1);
     auto tmp = record.get_all_category_discount();
-    std::cout<<tmp->size()<<std::endl;
-    ASSERT(tmp->size()==1,"错误");
+    // std::cout<<tmp->size()<<std::endl;
+   try{
+       auto g = goodsrecord.get(5);
+       std::cout<<g->name()<<std::endl;
+        if(g!=0){
+            GoodsContext context(g.get(),1,customer.get());
+            double price = g->get_price(context);
+            std::cout<<"price: "<<price<<std::endl;
+            context.num() = 2;
+            price = g->get_price(context);
+            std::cout<<"price: "<<price<<std::endl;
+            context.num() = 3;
+            price = g->get_price(context);
+            std::cout<<"price: "<<price<<std::endl;
+            ASSERT(price ==270,"打折失败3")
+        }else{
+            exit(EXIT_FAILURE);
+        }
+    }catch(const char*str){
+        puts(str);
+    }
     return 0;
 }

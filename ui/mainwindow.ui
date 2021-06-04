@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>801</width>
+    <height>417</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>在线商城</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <item row="1" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1">
+      <item>
+       <layout class="QFormLayout" name="formLayout">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetDefaultConstraint</enum>
+        </property>
+        <property name="formAlignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="horizontalSpacing">
+         <number>0</number>
+        </property>
+        <property name="verticalSpacing">
+         <number>0</number>
+        </property>
+        <item row="0" column="0">
+         <widget class="QPushButton" name="pushButton_2">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>130</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>商品浏览</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QPushButton" name="pushButton">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>130</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>个人信息</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="pushButton_3">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>130</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>购物车</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>801</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>登录/登出</string>
+    </property>
+    <addaction name="action_login"/>
+    <addaction name="action_register"/>
+    <addaction name="action_logout"/>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <action name="action_login">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>登录</string>
+   </property>
+  </action>
+  <action name="action_logout">
+   <property name="text">
+    <string>登出</string>
+   </property>
+  </action>
+  <action name="action_register">
+   <property name="text">
+    <string>注册</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

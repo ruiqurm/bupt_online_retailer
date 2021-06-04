@@ -73,7 +73,6 @@ class GoodsTemplate: public Goods{
         static std::shared_ptr<IMPL> cast(std::shared_ptr<Goods>u){
             return std::dynamic_pointer_cast<IMPL>(u);
         }
-        // static void Enable() { volatile uint16_t x =  }
    protected:
       GoodsTemplate(const GoodsData&data):Goods(data) {
           _TYPE = GOODS_TYPE_ID; 
@@ -259,6 +258,7 @@ class GoodsContext{
         User& user()const{return *p_user;}
         Goods& goods()const{return *p_goods;}
         int num()const{return _num;}
+        int&num(){return _num;}
         void add_price(double p){
             total_price += p;
         }
@@ -306,10 +306,10 @@ class DiscountSimple:public Discount{
         DiscountSimple(int id,unsigned char type,int operand,double discount,double threshold=-1):
             Discount(id,type,operand,discount,threshold){}
         double price(const GoodsContext&context)override{
-            if ((_threshold>0&& context.goods().price() * context.num() >_threshold) || (_threshold<=0)){
+            if ( (_threshold<=0) || (_threshold>0&& context.goods().price() * context.num() >_threshold)){
                 return context.goods().price() *context.num()*  _discount;
             }else{
-                return context.goods().price();
+                return context.goods().price()*context.num();
             }
         }
 };
@@ -322,7 +322,7 @@ class DiscountCategory:public Discount{
             if ((_threshold>0&&context.goods().price()*context.num()>_threshold) || (_threshold<=0)){
                 return context.goods().price() *context.num()* _discount;
             }else{
-                return context.goods().price();
+                return context.goods().price()*context.num();
             }
         }
 };

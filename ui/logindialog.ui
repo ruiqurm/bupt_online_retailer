@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>loginDialog</class>
+ <widget class="QDialog" name="loginDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>392</width>
+    <height>221</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>登录</string>
+  </property>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>170</y>
+     <width>80</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>登录</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>90</x>
+     <y>40</y>
+     <width>221</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="3,3,1">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>账号</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineEdit"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>密码</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineEdit_2">
+        <property name="echoMode">
+         <enum>QLineEdit::Password</enum>
+        </property>
+        <property name="placeholderText">
+         <string/>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="hint">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

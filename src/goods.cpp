@@ -277,7 +277,7 @@ void DiscountRecord::remove(int id){
     static char buffer[192];
     static const char sql[] = "DELETE FROM _DISCOUNT WHERE ID=%d;";
     sprintf(buffer,sql,id);
-    Database::exec(db,sql,nullptr,nullptr);
+    Database::exec(db,buffer,nullptr,nullptr);
 }
 void DiscountRecord::remove_by_goods(int goods_id){
     static char buffer[192];

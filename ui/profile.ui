@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Profile</class>
+ <widget class="QWidget" name="Profile">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>60</y>
+     <width>281</width>
+     <height>238</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,3,0,3,3,1,3,3">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="4,10,4">
+      <item>
+       <widget class="QLabel" name="balance_2">
+        <property name="text">
+         <string>余额</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="balance">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="deposit">
+        <property name="text">
+         <string>充值</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,8">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>账号</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="username">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_5"/>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,8">
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>新密码</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="new_password_1">
+        <property name="echoMode">
+         <enum>QLineEdit::Password</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="2,8">
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>再次输入</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="new_password_2">
+        <property name="echoMode">
+         <enum>QLineEdit::Password</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="hint">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton">
+      <property name="text">
+       <string>确认修改</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
