@@ -30,7 +30,7 @@ set(all_lib
     bupt_online_ratailer_static
     sqlite3)
 
-UNIT_TEST_MULT_LIB(test_buying all_lib)
+# UNIT_TEST_MULT_LIB(test_buying all_lib)
 
-
+UNIT_TEST_MULT_LIB(test_cart all_lib)
 UNIT_TEST_MULT_LIB(test_discount all_lib)

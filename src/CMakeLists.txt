@@ -10,9 +10,9 @@ add_library(database STATIC database.cpp)
 add_library(users STATIC user.cpp concreteUser.cpp)
 
 
-add_library(goods STATIC goods.cpp user.cpp database.cpp concreteUser.cpp)
+add_library(goods STATIC transaction.cpp goods.cpp user.cpp database.cpp concreteUser.cpp )
 
-add_library(bupt_online_ratailer_static STATIC concreteUser.cpp concreteGoods.cpp goods.cpp user.cpp database.cpp sqlite3.c)
+add_library(bupt_online_ratailer_static STATIC concreteUser.cpp concreteGoods.cpp transaction.cpp goods.cpp user.cpp database.cpp sqlite3.c)
 target_link_libraries(bupt_online_ratailer_static pthread dl)
 # TARGET_LINK_LIBRARIES(bupt_online_ratailer_static users goods)
 # add_library(concreteImpl STATIC concreteUser.cpp concreteGoods.cpp)

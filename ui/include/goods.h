@@ -47,7 +47,7 @@ class Goods{
         int type()const{return data.type;}
         
         bool save();
-        bool buy(User*u,int num);
+        // bool buy(User*u,int num);
         virtual double get_price(const GoodsContext&)=0;
 
         virtual int get_goods_type()const=0;
@@ -117,7 +117,8 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
             GoodsRecord::register_types[id] =factoryMethod;
             return id;
         }
-        void remove(int id)override;        
+        void remove(int id)override; 
+        pGoodsVec get_user_goods(const std::vector<int>&l);
     protected:
         // using _remove= MetaRecord<Goods,GoodsData>::remove;
         GoodsRecord();
@@ -172,82 +173,6 @@ class TransactionData{
         int to;
         int count;//交易量
         int goodsID;
-};
-
-class Transaction{
-    public:
-        Transaction(int id,int from,int to,string goodsName,int goodsID,double volume,double price,int count,time_t timestamp):
-                    data(id,from,to,goodsName,goodsID,volume,price,count,timestamp){}
-        explicit Transaction(const TransactionData& data):data(data){}
-        static int make_transaction(int from,int to,string goodsName,int goodsID,double volume,double price,int count);
-        Transaction(){}
-        const int id()const{return data.id;}
-        std::shared_ptr<User> from()const{
-            auto& record = UserRecord::get_record();
-            return record.create_user(record.get(data.from));
-        }
-       std::shared_ptr<User> to()const{
-            auto& record = UserRecord::get_record();
-            return record.create_user(record.get(data.to));
-        }
-        const string& goodsName()const{return data.goodsName;}
-        std::shared_ptr<Goods> goods()const;
-        const double volume()const{
-            return data.volume;
-        }
-        const double price()const{
-            return data.price;
-        }
-        const int count()const{
-            return data.count;
-        }
-        const time_t time()const{
-            return data.timestamp;
-        }
-    private:
-        TransactionData data;
-};
-template <>
-constexpr char MetaRecord<Transaction,TransactionData>::TABLE_NAME[];
-
-class TransactionRecord: public MetaRecord<Transaction,TransactionData>{
-    public:
-        typedef std::unique_ptr<std::vector<std::shared_ptr<Transaction>>> pTransVec;
-        static TransactionRecord& get_record(){
-            static TransactionRecord record;
-            return record;
-        }
-        TransactionRecord(const TransactionRecord&)=delete;//禁止拷贝构造
-        std::shared_ptr<Transaction> get(int id);
-        pTransVec get_user_transactions(int user_id);
-    protected:
-        TransactionRecord();
-
-        void insert_data_to_string(char buffer[],const TransactionData& data){
-            static const char sql[] =  "INSERT INTO %s (_FROM,_TO,GOODSNAME,GOODSID,VOLUME,PRICE,COUNT,TIMESTAMP) VALUES"\
-                                                      "(%d, %d ,'%s',%d, %f, %f ,%d,%d); ";
-            snprintf(buffer,512,sql,TABLE_NAME,data.from,data.to,data.goodsName.c_str(),data.goodsID,data.volume,data.price,data.count,(int)time(nullptr));
-
-        }
-
-        static int fetch_in_struct(void*_data, int argc, char **argv, char **azColName){
-            TransactionData* data = (TransactionData*)_data;
-            data->id = atoi(argv[0]);
-            data->goodsName.assign(argv[1]);
-            data->from = atoi(argv[2]);
-            data->to = atoi(argv[3]);
-            data->goodsID = atoi(argv[4]);
-            data->volume = atof(argv[5]);
-            data->price = atof(argv[6]);
-            data->count = atoi(argv[7]);
-            data->timestamp = atoi(argv[8]);
-            return 0;
-        }
-        static int fetch_in_vector(void*_data, int argc, char **argv, char **azColName){
-            auto& vec = *(std::vector<std::shared_ptr<Transaction>>*)_data;
-            vec.emplace_back(std::make_shared<Transaction>(atoi(argv[0]),atoi(argv[2]),atoi(argv[3]),argv[1],atoi(argv[4]),atof(argv[5]),atof(argv[6]),atoi(argv[7]),atoi(argv[8])));
-            return 0;
-        }
 };
 
 
@@ -306,7 +231,7 @@ class DiscountSimple:public Discount{
         DiscountSimple(int id,unsigned char type,int operand,double discount,double threshold=-1):
             Discount(id,type,operand,discount,threshold){}
         double price(const GoodsContext&context)override{
-            if ((_threshold>0&& context.goods().price() * context.num() >_threshold) || (_threshold<=0)){
+            if ( (_threshold<=0) || (_threshold>0&& context.goods().price() * context.num() >_threshold)){
                 return context.goods().price() *context.num()*  _discount;
             }else{
                 return context.goods().price()*context.num();

@@ -35,6 +35,7 @@ add_subdirectory(test)
 
 set (dist_gen_name ${CMAKE_BINARY_DIR}/dist)
 add_custom_target (generate
+    COMMAND make -j12
     COMMAND ${CMAKE_COMMAND} -E  # 创建dist文件夹
         make_directory ${dist_gen_name}
     COMMAND ${CMAKE_COMMAND} -E  # 复制头文件
@@ -43,7 +44,16 @@ add_custom_target (generate
         make_directory ${dist_gen_name}/libs
     COMMAND ${CMAKE_COMMAND} -E 
         copy ${CMAKE_BINARY_DIR}/src/libbupt_online_ratailer_static.a ${dist_gen_name}/libs/
+    COMMAND echo 在${CMAKE_BINARY_DIR}/dist/下生成
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
+add_custom_target(copy_to_ui
+    COMMAND generate
+    COMMAND ${CMAKE_COMMAND} -E  # 复制头文件
+    copy_directory ${dist_gen_name}/include  ${PROJECT_SOURCE_DIR}/ui/include
+   COMMAND ${CMAKE_COMMAND} -E  # 复制lib
+    copy_directory ${dist_gen_name}/libs  ${PROJECT_SOURCE_DIR}/ui/libs
+)
 add_custom_target (gen_clean
     COMMAND ${CMAKE_COMMAND} -E
         remove_directory ${dist_gen_name}

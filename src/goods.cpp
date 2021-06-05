@@ -7,46 +7,46 @@
  */
 template <>
 constexpr char MetaRecord<Goods,GoodsData>::TABLE_NAME[] = "GOODS";
-template <>
-constexpr char MetaRecord<Transaction,TransactionData>::TABLE_NAME[] ="MYTRANSACTION";
+// template <>
+// constexpr char MetaRecord<Transaction,TransactionData>::TABLE_NAME[] ="MYTRANSACTION";
 
 bool Goods::save(){
     auto &record = GoodsRecord::get_record();
     return record.update(data);
 }
-bool Goods::buy(User* u,int num){
-    if(!u)return false;
-    auto &record = UserRecord::get_record();
-    auto seller = record.get(data.id);
-    if(!seller)return false;
-    //商家不存在
-    #if DEBUG==1
-    #include<iostream>
-    std::cout<<"构建上下文"<<endl;
-    #endif
-    GoodsContext context(this,num,u);
-    double volume = get_price(context);
-    if(u->balance()<volume){
-        return false;
-    }
-    if(data.remain<num){
-        return false;
-    }
-    #if DEBUG==1
-    #include<iostream>
-    std::cout<<"尝试写入交易"<<endl;
-    #endif
-    if(Transaction::make_transaction(data.seller,u->id(),data.name,data.id,volume,data.price,num)){
-        data.remain -= num;
-        save();
-        u->balance() -= volume;
-        u->save();
-        seller->balance += volume;
-        seller->save();
-        return true;
-    }
-    return false;
-} 
+// bool Goods::buy(User* u,int num){
+//     if(!u)return false;
+//     auto &record = UserRecord::get_record();
+//     auto seller = record.get(data.id);
+//     if(!seller)return false;
+//     //商家不存在
+//     #if DEBUG==1
+//     #include<iostream>
+//     std::cout<<"构建上下文"<<endl;
+//     #endif
+//     GoodsContext context(this,num,u);
+//     double volume = get_price(context);
+//     if(u->balance()<volume){
+//         return false;
+//     }
+//     if(data.remain<num){
+//         return false;
+//     }
+//     #if DEBUG==1
+//     #include<iostream>
+//     std::cout<<"尝试写入交易"<<endl;
+//     #endif
+//     if(Transaction::make_transaction(data.seller,u->id(),data.name,data.id,volume,data.price,num)){
+//         data.remain -= num;
+//         save();
+//         u->balance() -= volume;
+//         u->save();
+//         seller->balance += volume;
+//         seller->save();
+//         return true;
+//     }
+//     return false;
+// } 
 
 /**
  * GoodsRecord
@@ -72,6 +72,22 @@ std::shared_ptr<Goods> GoodsRecord::get(int id){
     Database::exec(db,buffer,fetch_in_struct,&goods);
     return register_types[goods.type](goods);
 }
+GoodsRecord::pGoodsVec GoodsRecord::get_user_goods(const std::vector<int>&l){
+    if(l.size()==0)return std::make_unique<std::vector<std::shared_ptr<Goods>>>();
+    std::stringstream ss;
+    ss<<"SELECT * FROM "
+     <<TABLE_NAME
+     <<" Where ID IN ( "
+     <<l[0];
+    if(l.size()>1)
+    for(int i=1;i<l.size();i++){
+        ss<<l[i]<<", ";
+    }
+    ss<<" );";
+    auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
+    Database::exec(db,ss.str().c_str(),fetch_in_vector,nullptr);
+    return pvec;
+}
 GoodsRecord::pGoodsVec GoodsRecord::get_user_goods(int seller_id){
     static const char sql[] =  "SELECT * FROM %s WHERE SELLER=%d";
     static char buffer[48];
@@ -82,7 +98,7 @@ GoodsRecord::pGoodsVec GoodsRecord::get_user_goods(int seller_id){
 }
 
 GoodsRecord::pGoodsVec GoodsRecord::get_all_goods(){
-    static const char sql[] =  "SELECT * FROM %s LIMIT 20";
+    static const char sql[] =  "SELECT * FROM %s";
     static char buffer[48];
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
     snprintf(buffer,48,sql,TABLE_NAME);
@@ -115,56 +131,7 @@ void GoodsRecord::remove(int id){
     record.remove_by_goods(id);
     MetaRecord<Goods,GoodsData>::remove(id);
 }
-/**
- * 
- * 
- * 
- */
 
-TransactionRecord::TransactionRecord(){
-    static const char sql[]= "CREATE TABLE MYTRANSACTION("  \
-                                "ID INTEGER PRIMARY KEY AUTOINCREMENT," \
-                                "GOODSNAME      CHAR(64)    NOT NULL," \
-                                "_FROM           INT       NOT NULL," \
-                                "_TO             INT         NOT NULL," \
-                                "GOODSID        INT         NOT NULL," \
-                                "VOLUME         FLOAT         NOT NULL," \
-                                "PRICE          FLOAT         NOT NULL," \
-                                "COUNT          INT         NOT NULL," \
-                                "TIMESTAMP      INT         NOT NULL);" ;
-    Database::exec(db,sql,nullptr,nullptr);
-}
-std::shared_ptr<Transaction> TransactionRecord::get(int id){
-    static const char sql[] = "SELECT * FROM %s WHERE ID=%d";
-    static char buffer[48]; 
-    TransactionData d;
-
-    snprintf(buffer,48,sql,TABLE_NAME,id);
-    Database::exec(db,buffer,fetch_in_struct,&d);
-    return std::make_shared<Transaction>(d);
-}
-TransactionRecord::pTransVec TransactionRecord::get_user_transactions(int user_id){
-    static const char sql[] =  "SELECT * FROM %s WHERE FROM =%d OR TO=%d";
-    static char buffer[64];
-    auto pvec = std::make_unique<std::vector<std::shared_ptr<Transaction>>>();
-    snprintf(buffer,64,sql,TABLE_NAME,user_id,user_id);
-    Database::exec(db,buffer,fetch_in_vector,pvec.get());
-    return pvec;
-}
-/**
- * 
- * Transaction
- * 
- */
-int Transaction::make_transaction(int from,int to,string goodsName,int goodsID,double volume,double price,int count){
-    auto &record = TransactionRecord::get_record();
-    TransactionData data(from,to,goodsName,goodsID,volume,price,count);
-    return record.set(data);
-}
-std::shared_ptr<Goods> Transaction::goods()const{
-    auto& record = GoodsRecord::get_record();
-    return record.get(data.goodsID);
-}
 
 
 /*

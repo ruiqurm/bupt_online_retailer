@@ -13,10 +13,10 @@ class Seller:public UserTemplate<USER_TYPE::seller,Seller>{
         int get_user_type()const override{
             return _TYPE;
         }
-        void add_goods(GoodsData g){
+        int add_goods(GoodsData g){
             auto& record = GoodsRecord::get_record();
             g.seller = data->id;
-            record.set(g);
+            return record.set(g);
         }
         const std::vector<std::shared_ptr<Goods>>& goods(){
             if (!has_load_goods){

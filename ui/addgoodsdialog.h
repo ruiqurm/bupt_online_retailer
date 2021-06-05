@@ -32,6 +32,7 @@ private:
     void clear_hint();
     User* user;
     Goods* goods;
+    userGoodsManagement* manage;
     std::shared_ptr<Discount> origin_discount;
 };
 
