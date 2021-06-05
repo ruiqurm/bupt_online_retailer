@@ -28,7 +28,6 @@ userGoodsManagement::userGoodsManagement(User* u,QWidget *parent) :
     int size = _data->size();
     QList<QStandardItem*> rowData;
     for(const auto&it:*_data){
-        qDebug("aaaa");
         rowData.clear();
         rowData<< new QStandardItem(QString::number(it->id()))
                << new QStandardItem(QString::fromStdString(it->name()))

@@ -27,4 +27,5 @@ goodsBuying::~goodsBuying()
 void goodsBuying::on_buttonBox_accepted()
 {
 //    ui->num->
+    this->close();
 }

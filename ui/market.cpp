@@ -92,7 +92,7 @@ void Market::on_search_button_clicked()
 void Market::on_market_doubleClicked(const QModelIndex &index)
 {
     int id = model->item(index.row(),0)->text().toInt();
-    qDebug("%d",id);
+//    qDebug("%d",id);
     auto it = std::find_if(goods.begin(),goods.end(),[id](shared_ptr<Goods>&g)->bool{return (g->id()==id);});
     Goods* p=nullptr;
     if(it!=goods.end()){

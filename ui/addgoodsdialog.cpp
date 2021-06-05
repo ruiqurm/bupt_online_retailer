@@ -9,10 +9,11 @@ AddGoodsDialog::AddGoodsDialog(User* u,userGoodsManagement* ugm,Goods* g,QWidget
     ui(new Ui::AddGoodsDialog),
     user(u),
     goods(g),
+    manage(ugm),
     origin_discount(nullptr)
 {
     if(ugm!=nullptr){
-//        connect(this,&AddGoodsDialog::update_management,ugm,&userGoodsManagement::_on_add_new_goods);
+        connect(this,&AddGoodsDialog::update_management,ugm,&userGoodsManagement::_on_add_new_goods);
     }
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
@@ -24,9 +25,9 @@ AddGoodsDialog::AddGoodsDialog(User* u,userGoodsManagement* ugm,Goods* g,QWidget
         ui->count->setText(QString::number(g->remain()));
         auto& record = DiscountRecord::get_record();
         origin_discount = record.get_goods_discount(g->id());
-        if (origin_discount!=nullptr){
+        if (origin_discount!=nullptr){//打过折
             ui->discount->setEnabled(true);
-            ui->has_discount->setChecked(false);
+            ui->has_discount->setChecked(true);
             ui->discount->setText(QString::number(origin_discount->discount()));
         }else{
             ui->discount->setEnabled(false);
@@ -121,8 +122,8 @@ void AddGoodsDialog::on_pushButton_clicked()
         int id = record.set(data);
         auto& disrecord  = DiscountRecord::get_record();
         disrecord.make_discount(Discount::DISCOUNT,id,discount);
-//        if(has_market)emit update_market();
-//        if(has_goods_manage)emit update_management(record.get(id));
+//        if(market!=nullptr)emit update_market();
+        if(manage)emit update_management(record.get(id));
         msgBox.setText("创建成功");
     }else{
         goods->name() = ui->name->text().toStdString();
@@ -155,7 +156,7 @@ void AddGoodsDialog::on_pushButton_clicked()
 
 void AddGoodsDialog::on_has_discount_stateChanged(int check)
 {
-    qDebug("%d",check);
+//    qDebug("%d",check);
     if(check){
         ui->discount->setEnabled(true);
     }else{

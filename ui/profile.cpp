@@ -59,7 +59,7 @@ void Profile::on_pushButton_clicked()
     if(change&2){
         user->password()= ui->new_password_1->text().toStdString();
     }
-    qDebug("%d",user->save());
+    qDebug("保存状态:%d",user->save());
 
     QMessageBox msgBox;
     if(change==1){
