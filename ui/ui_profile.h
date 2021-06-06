@@ -12,10 +12,12 @@
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpacerItem>
+#include <QtWidgets/QTableView>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -44,12 +46,13 @@ public:
     QHBoxLayout *horizontalLayout_3;
     QSpacerItem *horizontalSpacer;
     QPushButton *pushButton;
+    QTableView *history;
 
     void setupUi(QWidget *Profile)
     {
         if (Profile->objectName().isEmpty())
             Profile->setObjectName(QString::fromUtf8("Profile"));
-        Profile->resize(400, 300);
+        Profile->resize(689, 324);
         layoutWidget = new QWidget(Profile);
         layoutWidget->setObjectName(QString::fromUtf8("layoutWidget"));
         layoutWidget->setGeometry(QRect(60, 60, 281, 238));
@@ -165,6 +168,9 @@ public:
         verticalLayout->setStretch(5, 1);
         verticalLayout->setStretch(6, 3);
         verticalLayout->setStretch(7, 3);
+        history = new QTableView(Profile);
+        history->setObjectName(QString::fromUtf8("history"));
+        history->setGeometry(QRect(360, 60, 311, 241));
 
         retranslateUi(Profile);
 

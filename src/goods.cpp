@@ -14,6 +14,20 @@ bool Goods::save(){
     auto &record = GoodsRecord::get_record();
     return record.update(data);
 }
+double Goods::get_price(const GoodsContext& context){
+    auto&record = DiscountRecord::get_record();
+    double min_price=context.goods().price()*context.num();//TODO: magic number;
+    auto p1 = record.get_goods_discount(context.goods().id());
+    if(p1){
+        min_price = std::min(p1->price(context),min_price);
+        std::cout<<p1->price(context)<<std::endl;
+    }
+    auto p2 = record.get_category_discount(context.goods().type());
+    if(p2){
+        min_price = std::min(p2->price(context),min_price);
+    }
+    return min_price;
+}
 // bool Goods::buy(User* u,int num){
 //     if(!u)return false;
 //     auto &record = UserRecord::get_record();
@@ -72,20 +86,21 @@ std::shared_ptr<Goods> GoodsRecord::get(int id){
     Database::exec(db,buffer,fetch_in_struct,&goods);
     return register_types[goods.type](goods);
 }
-GoodsRecord::pGoodsVec GoodsRecord::get_user_goods(const std::vector<int>&l){
+GoodsRecord::pGoodsVec GoodsRecord::get(const std::vector<int>&l){
     if(l.size()==0)return std::make_unique<std::vector<std::shared_ptr<Goods>>>();
     std::stringstream ss;
     ss<<"SELECT * FROM "
      <<TABLE_NAME
-     <<" Where ID IN ( "
+     <<" WHERE ID IN ( "
      <<l[0];
     if(l.size()>1)
     for(int i=1;i<l.size();i++){
-        ss<<l[i]<<", ";
+        ss<<", "<<l[i];
     }
     ss<<" );";
+    // puts(ss.str().c_str());
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
-    Database::exec(db,ss.str().c_str(),fetch_in_vector,nullptr);
+    Database::exec(db,ss.str().c_str(),fetch_in_vector,pvec.get());
     return pvec;
 }
 GoodsRecord::pGoodsVec GoodsRecord::get_user_goods(int seller_id){

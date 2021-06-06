@@ -6,10 +6,10 @@
 #include"adapter.h"
 #include<QString>
 #include<exception>
-Market::Market(User* u,QWidget *parent) :
+
+Market::Market(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::Market),
-    user(u)
+    ui(new Ui::Market)
 {
     ui->setupUi(this);
     qDebug("open market");
@@ -30,6 +30,8 @@ Market::Market(User* u,QWidget *parent) :
     ui->market->setModel(model);
     ui->market->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->market->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+     mainwindow = MainWindow::getMainWindow();
+    connect(this,&Market::login,mainwindow,&MainWindow::login);
 }
 void Market::update_data_default(){
     auto& record = GoodsRecord::get_record();
@@ -58,6 +60,7 @@ void Market::update_data(GoodsRecord::pGoodsVec data){
        model->setItem(i, 4, new QStandardItem(QString::number((*data)[i]->remain())));
        model->setItem(i, 5, new QStandardItem(qtGoodsAdapter::toString((*data)[i]->type()) ));
    }
+   goods.swap(*data.release());
 }
 
 Market::~Market()
@@ -91,6 +94,11 @@ void Market::on_search_button_clicked()
 
 void Market::on_market_doubleClicked(const QModelIndex &index)
 {
+    User* user = mainwindow->get_user();
+    if(user==nullptr){
+        emit login();
+        return;
+    }
     int id = model->item(index.row(),0)->text().toInt();
 //    qDebug("%d",id);
     auto it = std::find_if(goods.begin(),goods.end(),[id](shared_ptr<Goods>&g)->bool{return (g->id()==id);});
@@ -104,7 +112,7 @@ void Market::on_market_doubleClicked(const QModelIndex &index)
         goods.push_back(p2);
      }
     GoodsContext context(p,1,user);
-    (new goodsBuying(context))->exec();
+    (new goodsBuying(context,this))->exec();
 //    int count = QInputDialog::getInt(nullptr,"","",0,1,)  (0, "购买","购买数量:", QLineEdit::Normal,1, &ok);
 //    QInputDialog::getInt()
 

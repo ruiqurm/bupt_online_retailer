@@ -18,6 +18,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     addgoodsdialog.cpp \
+    cartwidget.cpp \
     categorydiscount.cpp \
     goodsbuying.cpp \
     logindialog.cpp \
@@ -26,11 +27,13 @@ SOURCES += \
     market.cpp \
     profile.cpp \
     registerdialog.cpp \
+    tranform.cpp \
     usergoodsmanagement.cpp
 
 HEADERS += \
     adapter.h \
     addgoodsdialog.h \
+    cartwidget.h \
     categorydiscount.h \
     goodsbuying.h \
     include/concreteGoods.h \
@@ -46,10 +49,12 @@ HEADERS += \
     market.h \
     profile.h \
     registerdialog.h \
+    tranform.h \
     usergoodsmanagement.h
 
 FORMS += \
     addgoodsdialog.ui \
+    cartwidget.ui \
     categorydiscount.ui \
     goodsbuying.ui \
     logindialog.ui \
@@ -57,6 +62,7 @@ FORMS += \
     market.ui \
     profile.ui \
     registerdialog.ui \
+    tranform.ui \
     usergoodsmanagement.ui
 LIBS += -L$$PWD/libs -lbupt_online_ratailer_static
 LIBS += -lpthread\

@@ -42,6 +42,20 @@ int main(){
         puts(str);
         exit(EXIT_FAILURE);
     }
+    {
+        std::vector<int> v{1,2,3,4,5};
+        auto &record = GoodsRecord::get_record();
+        auto p = record.get(v);
+        for(auto&i:*p){
+            std::cout<<i->name()<<std::endl;
+        }
+        std::cout<<"------------"<<std::endl;
+        std::vector<int> v2{2};
+        auto p2 = record.get(v2);
+        for(auto&i:*p2){
+            std::cout<<i->name()<<std::endl;
+        }
+    }
     std::cout<<"完成"<<std::endl;
     return 0;
 }

@@ -49,6 +49,7 @@ int TransactionRecord::fetch_to_object(void*_data, int argc, char **argv, char *
                             atof(argv[6]),
                             argv[7],
                             atoll(argv[8]));
+    // std::cout<<data->from_id()<<std::endl;
     return 0;
 }
 int TransactionRecord::fetch_to_vector(void*_data, int argc, char **argv, char **azColName){
@@ -112,16 +113,21 @@ int Transaction::save(){
 }
 const std::shared_ptr<std::map<int,std::tuple<string,int,double>>> Transaction::detail(){
     if(!_detail_map){
+        // std::cout<<_detail<<std::endl;
         std::stringstream ss(_detail);
         int n;
         ss>>n;
+        // std::cout<<n<<std::endl;
         _detail_map = std::make_shared<std::map<int,std::tuple<string,int,double>>>();
         int tmp1;
         string tmp2;
         int tmp3;
         double tmp4;
         for(int i=0;i<n;i++){
-            ss>>tmp1>>tmp2>>tmp3>>tmp4;
+            ss>>tmp1;ss.ignore(1);
+            getline(ss,tmp2);
+            ss>>tmp3>>tmp4;
+            // std::cout<<"id="<<tmp1<<" s="<<tmp2<<" num="<<tmp3<<" price="<<tmp4<<std::endl;
             (*_detail_map)[tmp1] = std::make_tuple(tmp2,tmp3,tmp4);
         }
     }
@@ -137,12 +143,25 @@ string Transaction::write_detail(const std::map<int,std::tuple<string,int,double
     return ss.str();
 }
 
-void Transaction::set_finished(){
+bool Transaction::set_finished(){
     if(_finished==false&&_id>0){
+        auto to_u = to();
+        // std::cout<<to_u->id();
+        if(to_u->balance() < _volume){
+;
+            return false;
+        }
         _finished=true;
         auto&record = TransactionRecord::get_record();
         record.set_finished(_id);
+        auto from_u = from();
+        from_u->balance() += _volume;
+        to_u ->balance()  -= _volume;
+        from_u->save();
+        to_u->save();
+        return true;
     }
+    return false;
 }
 
 /**
@@ -170,12 +189,13 @@ std::map<int,int> CartRecord::get(int user_id){
 // void CartRecord::set(const std::map<int,int>&m){
 
 // }
-void CartRecord::set(int user_id,int goods_id,int num){
+int CartRecord::set(int user_id,int goods_id,int num){
     static char buffer[128];
     static const char sql[] = "INSERT INTO CART (USER,GOODS,COUNT)"\
                               "VALUES(%d,%d,%d); ";
     sprintf(buffer,sql,user_id,goods_id,num);
     Database::exec(db,buffer,nullptr,nullptr);
+    return sqlite3_last_insert_rowid(db);
 }
 void CartRecord::remove(int user_id,int goods_id){
     static char buffer[128];
@@ -205,15 +225,41 @@ Cart::Cart(int user_id){
     auto& crecord = CartRecord::get_record();
     _data = crecord.get(user_id);
 }
-void Cart::add(int goods_id,int delta){
+
+bool Cart::exist(int goods_id){
+    auto it = _data.find(goods_id);
+    return (it!=_data.end());
+}
+//添加
+bool Cart::add(int goods_id,int delta,int max_count){
     auto it = _data.find(goods_id);
     auto& crecord = CartRecord::get_record();
+    bool ok = true;
     if(it!=_data.end()){
-        crecord.set(user,goods_id,it->second+delta);
-        _data[goods_id] = it->second+delta;        
+        if(max_count>0&&it->second+delta>max_count){
+             crecord.set(user,goods_id,max_count);
+            _data[goods_id] = max_count;
+            ok=false;
+        }else{
+            crecord.set(user,goods_id,it->second+delta);
+            _data[goods_id] = it->second+delta;
+        }
+                
     }else{
        crecord.set(user,goods_id,delta);
        _data[goods_id] = delta;
+    }
+    return ok;
+}
+void Cart::add(int goods_id,int delta){
+    add(goods_id,delta,-1);
+}
+int Cart::operator [](int goods_id)const{
+    auto it = _data.find(goods_id);
+    if(it!=_data.end()){
+        return it->second;
+    }else{
+        return -1;
     }
 }
 void Cart::reduce(int goods_id,int delta){
@@ -231,10 +277,42 @@ void Cart::reduce(int goods_id,int delta){
         }    
     }
 }
+void Cart::clear(){
+    for(auto&i:_data){
+        auto& crecord = CartRecord::get_record();
+        crecord.remove(user,i.first);
+    }
+    _data.clear();
+}
 void Cart::remove(int goods_id){
     auto& crecord = CartRecord::get_record();
    crecord.remove(user,goods_id); 
 }
-const std::map<int,int>& Cart::data(){
+const std::map<int,int>& Cart::data()const{
     return _data;
+}
+std::map<int,int>& Cart::data(){
+    return _data;
+}
+bool Cart::set(int goods_id,int num,int max_count){
+    auto it = _data.find(goods_id);
+    auto& crecord = CartRecord::get_record();
+    if(it!=_data.end()){
+        if(max_count>0&&num>max_count){
+             crecord.set(user,goods_id,max_count);
+            _data[goods_id] = max_count;
+        }else if(num<=0){
+            crecord.remove(user,goods_id);
+            _data.erase(goods_id);
+            return false;
+        }else{
+            crecord.set(user,goods_id,num);
+            _data[goods_id] = num;
+        }
+                
+    }else{
+       crecord.set(user,goods_id,num);
+       _data[goods_id] = num;
+    }
+    return true;
 }

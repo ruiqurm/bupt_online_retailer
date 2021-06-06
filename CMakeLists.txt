@@ -48,7 +48,6 @@ add_custom_target (generate
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_custom_target(copy_to_ui
-    COMMAND generate
     COMMAND ${CMAKE_COMMAND} -E  # 复制头文件
     copy_directory ${dist_gen_name}/include  ${PROJECT_SOURCE_DIR}/ui/include
    COMMAND ${CMAKE_COMMAND} -E  # 复制lib

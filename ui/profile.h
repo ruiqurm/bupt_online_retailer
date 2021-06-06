@@ -3,6 +3,8 @@
 #include<QString>
 #include <QWidget>
 #include"include/user.h"
+#include<QStandardItem>
+#include "include/transaction.h"
 namespace Ui {
 class Profile;
 }
@@ -21,10 +23,14 @@ private slots:
 
     void on_deposit_clicked();
 
+    void on_history_doubleClicked(const QModelIndex &index);
+
 private:
     Ui::Profile *ui;
     void give_hint(QString s);
     User* user;
+    QStandardItemModel *model;
+    TransactionRecord::pTransVec trans;
 };
 
 #endif // PROFILE_H

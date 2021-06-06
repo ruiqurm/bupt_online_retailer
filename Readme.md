@@ -13,11 +13,15 @@ make -j4
 ```bash
 # 工作目录为当前项目根目录
 cd build
-# 编译
-make -j4
+
 # 在build下生成dist文件夹，里面包含include和libs两个文件夹
 make generate
 
 # 使用clean_gen删除dist文件夹
 make clean_gen
+```
+
+## 移动静态库到ui文件夹下
+```
+make copy_to_ui
 ```

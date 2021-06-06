@@ -14,6 +14,8 @@ int main(int argc,char**argv){
     seller1->save();
     User::register_(USER_TYPE::customer,"customer","123456");
     auto customer = Customer::cast(User::login("customer","123456"));
+    customer->balance()+=100000;
+    customer->save();
     GoodsData goods[5]{{"c++ primer",100,seller1->id(),GOODS_TYPE::Books,10,"c++:从入门到入土"},
                         {"Effective C++",100,seller1->id(),GOODS_TYPE::Books,10,"c++:从入门到入土"},
                         {"More Effective C++",100,seller1->id(),GOODS_TYPE::Books,10,"c++:从入门到入土"},
@@ -29,6 +31,9 @@ int main(int argc,char**argv){
     data[goods2_id] = std::make_tuple(goods[1].name,4,goods[1].price * 4);
     data[goods3_id] = std::make_tuple(goods[2].name,3,goods[2].price * 3);
     Transaction t(seller1->id(),customer->id(),goods[0].price * 5+goods[1].price * 4+goods[2].price * 3,data);
+    int tid = t.id();
+    std::cout<<"tid="<<tid<<std::endl;
+    try
     {
         auto&record =GoodsRecord::get_record();
         ASSERT(record.get(goods1_id)->remain() == goods[0].remain-5,"没有扣除1");
@@ -39,17 +44,37 @@ int main(int argc,char**argv){
         int size2 = trecord.get_transaction(seller1->id(),true)->size();
         // ASSERT(trecord.get_transaction(seller1->id(),true)->size()==0,"未完成的订单数目错误");
         t.set_finished();
-        ASSERT(trecord.get_transaction(seller1->id(),false)->size()==size1-1,"未完成的订单数目错误");
-        ASSERT(trecord.get_transaction(seller1->id(),true)->size()==size2+1,"完成的订单数目错误");
+        
+        int _size1 = trecord.get_transaction(seller1->id(),false)->size();
+        std::cout<<"size1="<<size1<<" "<<"_size1="<<_size1<<std::endl;
+        int _size2 = trecord.get_transaction(seller1->id(),true)->size();
+        std::cout<<"size2="<<size2<<" "<<"_size2="<<_size2<<std::endl;
+        ASSERT(_size1==size1-1,"未完成的订单数目错误");
+        ASSERT(_size2==size2+1,"完成的订单数目错误");
+    }catch(const char* str){
+        puts(str);
+        exit(EXIT_FAILURE);
     }
     Transaction t2(seller1->id(),customer->id(),goods[0].price * 5+goods[1].price * 4+goods[2].price * 3,data);
-    {
+    try{
         auto&trecord = TransactionRecord::get_record();
         int size = trecord.get_transaction(seller1->id(),false)->size();
         t2.cancel();
         ASSERT(trecord.get_transaction(seller1->id(),false)->size()==size-1,"未完成的订单数目错误");
         auto&record =GoodsRecord::get_record();
         ASSERT(record.get(goods1_id)->remain() == goods[0].remain-5,"多扣除了");
+    }catch(const char* str){
+        puts(str);
+        exit(EXIT_FAILURE);
+    }
+    try{
+        auto&trecord = TransactionRecord::get_record();
+        auto t = trecord.get(tid);
+        auto detail = t->detail();
+        
+    }catch(const char* str){
+        puts(str);
+        exit(EXIT_FAILURE);
     }
     cout<<"测试完成"<<endl;
     return 0;

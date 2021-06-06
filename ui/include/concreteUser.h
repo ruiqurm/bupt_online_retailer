@@ -1,6 +1,9 @@
 #pragma once
 #include"user.h"
 #include"goods.h"
+#include"transaction.h"
+
+
 namespace USER_TYPE{
 enum{
     customer,
@@ -26,7 +29,9 @@ class Seller:public UserTemplate<USER_TYPE::seller,Seller>{
             }
             return *_goods;
         }
+        int buy(Cart&cart,std::vector<int>&selection);
         ~Seller(){}
+        // int buy(std::vector<int> selection);
     private:
         std::unique_ptr<std::vector<std::shared_ptr<Goods>>>_goods;
         bool has_load_goods;
@@ -35,10 +40,11 @@ class Seller:public UserTemplate<USER_TYPE::seller,Seller>{
 class Customer:public UserTemplate<USER_TYPE::customer,Customer>{
     public:
         Customer(UserData* p):UserTemplate(p){}
+        int buy(Cart&cart,std::vector<int>&selection);
         int get_user_type()const override{
             return _TYPE;
         }
-        int buy(Goods&,int num);
+        
         ~Customer(){}
 
 };

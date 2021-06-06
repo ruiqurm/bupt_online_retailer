@@ -96,6 +96,9 @@ class UserTemplate: public User{
         static std::shared_ptr<IMPL> cast(std::shared_ptr<User>u){
             return std::dynamic_pointer_cast<IMPL>(u);
         }
+        static IMPL* cast(User*u){
+            return dynamic_cast<IMPL*>(u);
+        }
         // static void Enable() { volatile uint16_t x =  }
    protected:
       UserTemplate(UserData* p):User(p) { _TYPE = USER_TYPE_ID; } 
@@ -136,6 +139,7 @@ class UserRecord final{
             struct stat buffer;   
             return (stat (name.c_str(), &buffer) == 0); 
         }
+        
     private:
         UserRecord();
         ~UserRecord(){}

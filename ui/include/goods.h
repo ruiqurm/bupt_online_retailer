@@ -48,7 +48,7 @@ class Goods{
         
         bool save();
         // bool buy(User*u,int num);
-        virtual double get_price(const GoodsContext&)=0;
+       double get_price(const GoodsContext&);
 
         virtual int get_goods_type()const=0;
 
@@ -118,7 +118,7 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
             return id;
         }
         void remove(int id)override; 
-        pGoodsVec get_user_goods(const std::vector<int>&l);
+        pGoodsVec get(const std::vector<int>&l);
     protected:
         // using _remove= MetaRecord<Goods,GoodsData>::remove;
         GoodsRecord();

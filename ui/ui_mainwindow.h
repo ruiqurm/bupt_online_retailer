@@ -80,7 +80,7 @@ public:
 
         pushButton_3 = new QPushButton(centralwidget);
         pushButton_3->setObjectName(QString::fromUtf8("pushButton_3"));
-        pushButton_3->setEnabled(false);
+        pushButton_3->setEnabled(true);
         pushButton_3->setMinimumSize(QSize(0, 130));
 
         formLayout->setWidget(1, QFormLayout::LabelRole, pushButton_3);
@@ -95,7 +95,7 @@ public:
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
-        menubar->setGeometry(QRect(0, 0, 801, 22));
+        menubar->setGeometry(QRect(0, 0, 801, 23));
         menu = new QMenu(menubar);
         menu->setObjectName(QString::fromUtf8("menu"));
         MainWindow->setMenuBar(menubar);

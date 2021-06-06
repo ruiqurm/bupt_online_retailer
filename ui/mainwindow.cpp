@@ -9,6 +9,7 @@
 #include "addgoodsdialog.h"
 #include "usergoodsmanagement.h"
 #include "categorydiscount.h"
+#include "include/transaction.h"
 #include<cstring>
 #include<QMessageBox>
 MainWindow::MainWindow(QWidget *parent) :
@@ -17,17 +18,14 @@ MainWindow::MainWindow(QWidget *parent) :
     user(nullptr),
     mainframe(nullptr),
     market(nullptr),
-    profile(nullptr),
-    sellerMenu(nullptr)
+    sellerMenu(nullptr),
+    cart(nullptr)
 {
     ui->setupUi(this);
-    open_market();
-//    menu->
-//    ui->menubar[1].addAction("add_item");
-//    connect()
-//    QAction *login= this->menuBar()->
-//    connect(login,SIGNAL(triggered()),this,SLOT();
-
+    market = mainframe = new Market;
+    mainframe->show();
+    ui->horizontalLayout->addWidget(mainframe,12);
+//    open_market();
 }
 MainWindow::MainWindow(std::shared_ptr<User>u):MainWindow(nullptr){
    user = u;
@@ -38,7 +36,6 @@ MainWindow::~MainWindow()
 {
     mainframe->close();
     if(market)delete market;
-    if(profile)delete profile;
     delete ui;
 }
 
@@ -49,6 +46,7 @@ void MainWindow::on_action_login_triggered()
     if(!user){
         loginDialog *dlg = new loginDialog(this);
         dlg->show();
+
     }else{
         QMessageBox box;
         box.setText("已经登陆");
@@ -62,7 +60,11 @@ void MainWindow::on_action_register_triggered()
     registerDialog *dlg = new registerDialog(this);
     dlg->show();
 }
-
+void MainWindow::login(){
+    loginDialog *dlg = new loginDialog(this);
+    dlg->show();
+    return;
+}
 void MainWindow::on_login(std::shared_ptr<User> user){
     qDebug("receive :\nusername:%s",
            user->username().c_str());
@@ -73,17 +75,23 @@ void MainWindow::on_login(std::shared_ptr<User> user){
         connect(sellerMenu->addAction("管理商品"), SIGNAL(triggered()), this, SLOT(my_on_action_manage_item_triggered()));
         connect(sellerMenu->addAction("管理品类打折"), SIGNAL(triggered()), this, SLOT(my_on_action_discount()));
     }
+    cart  = new cartWidget(user.get(),this);
+    ui->horizontalLayout->addWidget(cart,12);
+    cart->hide();
+    mainframe =market;
+    market->show();
+
 //    delete user;
 }
 void MainWindow::my_on_receive_logout(){
-    if(!strcmp(mainframe->metaObject()->className(),"Profile")){
-        open_market();
-    }
+    mainframe->hide();
+    mainframe = market;
     this->user = nullptr;
-    delete this->profile;
-    this->profile = nullptr;
+    if(this->cart){
+        delete this->cart;
+        this->cart = nullptr;
+    }
     delete sellerMenu;
-//    removeAction(sellerMenu);
     sellerMenu =nullptr;
 }
 void MainWindow::on_action_logout_triggered(){
@@ -99,21 +107,15 @@ void MainWindow::my_on_action_manage_item_triggered(){
 }
 
 void MainWindow::open_market(){
-    if(mainframe  && market){
-        if(!strcmp(mainframe->metaObject()->className(),"Market")){
-            return;//如果还是原来的
-        }
-        mainframe->close();
+    if(!strcmp(mainframe->metaObject()->className(),"Market")){
+        return;//如果还是原来的
+    }else if(!strcmp(mainframe->metaObject()->className(),"Profile")){
+        delete mainframe;
         mainframe = market;
-        mainframe->show();
     }else{
-        if(market){
-            mainframe = market;
-        }else{
-            if(mainframe)mainframe->close();
-            market  = mainframe = new Market(user.get(),this);
-        }
-        ui->horizontalLayout->addWidget(mainframe,12);
+        //切换到cart
+        mainframe->hide();
+        mainframe = market;
         mainframe->show();
     }
 }
@@ -124,21 +126,31 @@ void MainWindow::open_profile(){
         dlg->show();
         return;
     }
-    if(mainframe  && profile){
-        if(!strcmp(mainframe->metaObject()->className(),"Profile")){
-            return ;//如果还是原来的
-        }
-        mainframe->close();
-        mainframe = profile;
+    if(!strcmp(mainframe->metaObject()->className(),"Profile")){
+        return;
+    }else{
+        mainframe->hide();
+        mainframe = new Profile(user.get(),this);
+        ui->horizontalLayout->addWidget(mainframe,12);
+        mainframe->show();
+    }
+}
+void MainWindow::open_cart(){
+    if(!user){
+        //还没登录
+        loginDialog *dlg = new loginDialog(this);
+        dlg->show();
+        return;
+    }
+    if(!strcmp(mainframe->metaObject()->className(),"cartWidget")){
+        return ;//如果还是原来的
+    }else if(!strcmp(mainframe->metaObject()->className(),"Profile")){
+        delete mainframe;
+        mainframe = cart;
         mainframe->show();
     }else{
-        if(profile){
-            mainframe = profile;
-        }else{
-            if(mainframe)mainframe->close();
-            profile  = mainframe = new Profile(user.get(),this);
-        }
-        ui->horizontalLayout->addWidget(mainframe,12);
+        mainframe->hide();
+        mainframe = cart;
         mainframe->show();
     }
 }
@@ -163,10 +175,20 @@ int MainWindow::get_user_id() const
 void MainWindow::my_on_action_discount(){
     (new CategoryDiscount())->exec();
 }
-//void MainWindow::set_user_name(const QString&name){
-//    User::username();
-//}
-//void MainWindow::set_user_password(const QString&password);
-//void MainWindow::set_user(const QString&name,const QString&password){
-//    user->change_password()
-//}
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    open_cart();
+}
+void  MainWindow::_on_add_goods_to_cart(GoodsContext&context,double price){
+    if(cart){
+        dynamic_cast<cartWidget*>(cart)->add_goods(&context.goods(),context.num());
+    }
+}
+MainWindow* MainWindow::getMainWindow()
+{
+    foreach (QWidget *w, qApp->topLevelWidgets())
+        if (QMainWindow* mainWin = qobject_cast<QMainWindow*>(w))
+            return dynamic_cast<MainWindow*>(mainWin);
+    return nullptr;
+}

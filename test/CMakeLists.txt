@@ -20,11 +20,7 @@ set(test_user_lib
     sqlite3)
 UNIT_TEST_MULT_LIB(test_user test_user_lib)
 
-set(test_goodsrecord_lib
-    goods
-    sqlite3)
-UNIT_TEST_MULT_LIB(test_goodsrecord  test_goodsrecord_lib)
-UNIT_TEST_MULT_LIB(test_transaction  test_goodsrecord_lib)
+
 
 set(all_lib
     bupt_online_ratailer_static
@@ -34,3 +30,6 @@ set(all_lib
 
 UNIT_TEST_MULT_LIB(test_cart all_lib)
 UNIT_TEST_MULT_LIB(test_discount all_lib)
+UNIT_TEST_MULT_LIB(test_transaction  all_lib)
+UNIT_TEST_MULT_LIB(test_goodsrecord  all_lib)
+UNIT_TEST_MULT_LIB(test_buying  all_lib)

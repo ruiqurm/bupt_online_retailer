@@ -12,9 +12,9 @@
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QDialog>
-#include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
@@ -24,7 +24,6 @@ QT_BEGIN_NAMESPACE
 class Ui_goodsBuying
 {
 public:
-    QDialogButtonBox *buttonBox;
     QWidget *layoutWidget;
     QVBoxLayout *verticalLayout;
     QHBoxLayout *horizontalLayout_2;
@@ -33,18 +32,17 @@ public:
     QHBoxLayout *horizontalLayout;
     QLabel *label_2;
     QSpinBox *num;
+    QWidget *widget;
+    QHBoxLayout *horizontalLayout_3;
+    QPushButton *buy;
+    QPushButton *add_to_cart;
+    QPushButton *cancel;
 
     void setupUi(QDialog *goodsBuying)
     {
         if (goodsBuying->objectName().isEmpty())
             goodsBuying->setObjectName(QString::fromUtf8("goodsBuying"));
         goodsBuying->resize(318, 218);
-        buttonBox = new QDialogButtonBox(goodsBuying);
-        buttonBox->setObjectName(QString::fromUtf8("buttonBox"));
-        buttonBox->setGeometry(QRect(20, 160, 281, 32));
-        buttonBox->setOrientation(Qt::Horizontal);
-        buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok|QDialogButtonBox::Save);
-        buttonBox->setCenterButtons(true);
         layoutWidget = new QWidget(goodsBuying);
         layoutWidget->setObjectName(QString::fromUtf8("layoutWidget"));
         layoutWidget->setGeometry(QRect(50, 30, 231, 121));
@@ -84,10 +82,29 @@ public:
 
         verticalLayout->addLayout(horizontalLayout);
 
+        widget = new QWidget(goodsBuying);
+        widget->setObjectName(QString::fromUtf8("widget"));
+        widget->setGeometry(QRect(40, 170, 254, 28));
+        horizontalLayout_3 = new QHBoxLayout(widget);
+        horizontalLayout_3->setObjectName(QString::fromUtf8("horizontalLayout_3"));
+        horizontalLayout_3->setContentsMargins(0, 0, 0, 0);
+        buy = new QPushButton(widget);
+        buy->setObjectName(QString::fromUtf8("buy"));
+
+        horizontalLayout_3->addWidget(buy);
+
+        add_to_cart = new QPushButton(widget);
+        add_to_cart->setObjectName(QString::fromUtf8("add_to_cart"));
+
+        horizontalLayout_3->addWidget(add_to_cart);
+
+        cancel = new QPushButton(widget);
+        cancel->setObjectName(QString::fromUtf8("cancel"));
+
+        horizontalLayout_3->addWidget(cancel);
+
 
         retranslateUi(goodsBuying);
-        QObject::connect(buttonBox, SIGNAL(accepted()), goodsBuying, SLOT(accept()));
-        QObject::connect(buttonBox, SIGNAL(rejected()), goodsBuying, SLOT(reject()));
 
         QMetaObject::connectSlotsByName(goodsBuying);
     } // setupUi
@@ -99,6 +116,9 @@ public:
         price->setText(QApplication::translate("goodsBuying", "\302\2450.00", nullptr));
         label_2->setText(QApplication::translate("goodsBuying", "\346\225\260\351\207\217", nullptr));
         num->setPrefix(QString());
+        buy->setText(QApplication::translate("goodsBuying", "\350\264\255\344\271\260", nullptr));
+        add_to_cart->setText(QApplication::translate("goodsBuying", "\345\212\240\345\205\245\350\264\255\347\211\251\350\275\246", nullptr));
+        cancel->setText(QApplication::translate("goodsBuying", "\346\222\244\351\224\200", nullptr));
     } // retranslateUi
 
 };

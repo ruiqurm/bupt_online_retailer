@@ -5,10 +5,11 @@
 #include<QVariant>
 #include<QInputDialog>
 #include<QMessageBox>
-
+#include"tranform.h"
 Profile::Profile(User* user,QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Profile),
+    model(new QStandardItemModel(this)),
     user(user)
 {
     ui->setupUi(this);
@@ -18,7 +19,23 @@ Profile::Profile(User* user,QWidget *parent) :
     ui->balance->setReadOnly(true);
     qDebug("open profile");
     connect(this,&Profile::send_logout,static_cast<MainWindow*>(parent),&MainWindow::my_on_receive_logout);
-//    if(parent->)
+    model->setColumnCount(4);
+    model->setHeaderData(0,Qt::Horizontal,QString::fromUtf8("卖方"));
+    model->setHeaderData(1,Qt::Horizontal,QString::fromUtf8("买方"));
+    model->setHeaderData(2,Qt::Horizontal,QString::fromUtf8("总价"));
+    model->setHeaderData(3,Qt::Horizontal,QString::fromUtf8("交易时间"));
+    ui->history->setModel(model);
+    auto& record = TransactionRecord::get_record();
+    trans = record.get_transaction(user->id(),false);
+    int j=0;
+    for(auto &it:*trans){
+        model->setItem(j,0,new QStandardItem(QString::fromStdString(it->from_name())));
+        model->setItem(j,1,new QStandardItem(QString::fromStdString(it->to_name())));
+        model->setItem(j,2,new QStandardItem(QString::number(it->volume())));
+        j++;
+    }
+//    ui->history->setModel(model);
+    ui->history->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
 Profile::~Profile()
@@ -88,4 +105,10 @@ void Profile::on_deposit_clicked()
         QMessageBox msgBox(QMessageBox::Warning,tr("错误"),tr("非法的充值金额"));
         msgBox.exec();
     }
+}
+
+void Profile::on_history_doubleClicked(const QModelIndex &index)
+{
+    int i= index.row();
+    (new tranForm((*trans)[i]))->exec();
 }
