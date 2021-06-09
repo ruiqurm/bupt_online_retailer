@@ -7,3 +7,4 @@ include_directories(
 # find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 add_subdirectory(src)
+add_subdirectory(test)

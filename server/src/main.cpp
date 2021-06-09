@@ -7,10 +7,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 // #include"sqlite3.h"
+#include <thread>
 #include "server.h"
 extern "C" {
 #include"log.h"
 }
+using std::thread;
 
 int init(){
     
@@ -25,8 +27,10 @@ int init(){
     serv_addr.sin_addr.s_addr = INADDR_ANY;  
     serv_addr.sin_port = htons(8888);
     if (bind(sockfd, (struct sockaddr *) &serv_addr,
-              sizeof(serv_addr)) < 0) {}
-              log_fatal_exit_shortcut("bind_error");
+              sizeof(serv_addr)) < 0){
+              log_fatal_shortcut("bind_error");
+              }
+    log_info("listen on 127.0.0.1:8888");
     listen(sockfd,5);
     return sockfd;
 }
@@ -42,6 +46,7 @@ int init(){
 //     }
 //     return true;
 // }
+void handle_with_request(int sockfd);
 
 int main(int argc, char *argv[]){
     
@@ -61,21 +66,39 @@ int main(int argc, char *argv[]){
                     (struct sockaddr *) &cli_addr, &clilen);
         if (newsockfd < 0) 
         log_error("ERROR on accept");
-
-        log_info("server: got connection from %s port %d\n",
-            inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
-        // n = write(newsockfd,buffer,size);
-        n = read(newsockfd,read_buffer,size);
-        if (n < 0) {log_error("ERROR reading from socket");continue;}
-        if ((executor = ExecutorFactory(read_buffer,write_buffer))!=nullptr){
-        executor->exec();
-        }
-        n = write(newsockfd,write_buffer,executor->size());
-        if (n < 0) {log_error("ERROR writing from socket");continue;}
-
-        close(newsockfd);
+        log_info("server: got connection from %s port %d  in sockfd=%d",
+            inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port),newsockfd);
+        thread t(handle_with_request,newsockfd);
+        t.detach();
     }
      close(sockfd);
      return 0; 
 }
 
+void handle_with_request(int sockfd){
+    int size,n;
+    char read_buffer[8192];
+    char write_buffer[8192];
+    Executor* executor;
+    protoData::User*user=nullptr;
+    bool has_authenticated = false;
+    while(true){
+        size = 8192;
+        n = recv(sockfd,read_buffer,size,0);
+        if (n <= 0) {
+            if(n==0){
+                log_info("sockfd=%d close connection",sockfd);
+            }else{
+                log_error_shortcut("ERROR reading from socket");
+            }
+            break;
+        }
+        if ((executor = ExecutorFactory::get_executor(read_buffer,write_buffer,user))!=nullptr){
+            executor->exec();
+            user = executor->get_user();
+        }
+        n = send(sockfd,write_buffer,executor->size(),0);
+        if (n <= 0) {log_error("ERROR writing from socket");break;}
+    }
+    close(sockfd);
+}

@@ -11,6 +11,8 @@ extern "C" {
 }
 #include"protocol.h"
 #include"protoData.pb.h"
+#include<mutex>
+
 using std::fstream;
 using std::string;
 
@@ -45,12 +47,13 @@ class UserRecordWriter{
         * 登录功能和鉴权
         */
         string login(const protoData::UserForm & form);
-        bool logout(const string& token);
+        bool logout(protoData::User*user);
+        bool check_password(protoData::User*user,const string& password);
         bool _register(protoData::UserForm & form);
         void update(protoData::User&);
 
-        protoData::User* get_user_by_token(const string& token);
-        
+        protoData::User* get_user_by_token(const char* token);
+        protoData::User* get_user_by_username(const string&username);
         
         
     private:
@@ -98,72 +101,89 @@ class Executor{
             PERMISSION_ANY,
             PERMISSION_USER
         };
-        Executor(char* buffer,char*write_buf);
+        Executor(char* buffer,char*write_buf,protoData::User* user=nullptr,int permission = PERMISSION_USER);
         void exec();
         virtual void execImp()=0;
         int size(){return _size + sizeof(Protocol);}
-        static constexpr unsigned char permission = PERMISSION_USER;
         bool is_finished(){return _is_finished;}
-    protected:
-        bool _is_finished;
+        bool is_error(){return _is_error;}
+        protoData::User* get_user(){return user;}
+
         void set_error(int);
+        void set_length(int);
+        void set_status(int);
+    protected:
+        bool _is_error;
+        bool _is_finished;
+        
         int _size;
         char* read_buf;
         char* write_buf;
-        char* data;
+        char* read_data;
+        char* write_data;
         protoData::User* user;
 };
 
 class UserLoginExecutor: public Executor{
     public:
-        UserLoginExecutor(char*a,char*b):Executor(a,b){}
+        UserLoginExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1,PERMISSION_ANY){}
         void execImp()override;
-        static constexpr unsigned char permission = PERMISSION_ANY;
 };
 
 class UserLogoutExecutor: public Executor{
     public:
-        UserLogoutExecutor(char*a,char*b):Executor(a,b){}
+        UserLogoutExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
         void execImp()override;
 };
 
 class UserRegisterExecutor: public Executor{
     public:
-        UserRegisterExecutor(char*a,char*b):Executor(a,b){}
+        UserRegisterExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1,PERMISSION_ANY){}
         void execImp()override;
-        static constexpr unsigned char permission = PERMISSION_ANY;
 };
 
 class UserUpdateExecutor:public Executor{
     public:
-        UserUpdateExecutor(char*a,char*b):Executor(a,b){}
+        UserUpdateExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
         void execImp()override;
 };
 
 class UserAuthenticatePasswordExecutor:public Executor{
     public:
-        UserAuthenticatePasswordExecutor(char*a,char*b):Executor(a,b){}
+        UserAuthenticatePasswordExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class UserInfoExecutor:public Executor{
+    public:
+        UserInfoExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
         void execImp()override;
 };
 
-inline
-Executor* ExecutorFactory(char* read_buf,char* write_buf){
-    int type = ((Protocol*)read_buf)->type;
-    log_debug("type=%d",type);
-    switch (type){
-        case Protocol::USER_LOGIN:
-            return (Executor*)new UserLoginExecutor(read_buf,write_buf);
-        case Protocol::USER_LOGOUT:
-            return (Executor*)new UserLogoutExecutor(read_buf,write_buf);
-        case Protocol::USER_REGISTER:
-            return (Executor*)new UserRegisterExecutor(read_buf,write_buf);
-        case Protocol::USER_UPDATE:
-            return (Executor*)new UserUpdateExecutor(read_buf,write_buf);
-        case Protocol::USER_AUTHENTICATE_PASSWORD:
-            return (Executor*)new UserAuthenticatePasswordExecutor(read_buf,write_buf);
-        default:
-            break;
-    }
-    return nullptr;
-}
+class ExecutorFactory{
+    //工具类
+    public:
+        ExecutorFactory()=delete;
+        ExecutorFactory(const ExecutorFactory&)=delete;
+        static Executor* get_executor(char* read_buf,char* write_buf,protoData::User*user=nullptr,bool should_anthenticate=false){
+            int type = ((Protocol*)read_buf)->type;
+            log_debug("id =%d,type=%d,length=%d",((Protocol*)read_buf)->transaction_id,type,((Protocol*)read_buf)->length);
+            switch (type){
+                case Protocol::USER_LOGIN:
+                    return (Executor*)new UserLoginExecutor(read_buf,write_buf,user);
+                case Protocol::USER_LOGOUT:
+                    return (Executor*)new UserLogoutExecutor(read_buf,write_buf,user);
+                case Protocol::USER_REGISTER:
+                    return (Executor*)new UserRegisterExecutor(read_buf,write_buf,user);
+                case Protocol::USER_UPDATE:
+                    return (Executor*)new UserUpdateExecutor(read_buf,write_buf,user);
+                case Protocol::USER_AUTHENTICATE_PASSWORD:
+                    return (Executor*)new UserAuthenticatePasswordExecutor(read_buf,write_buf,user);
+                case Protocol::USER_INFO:
+                    return (Executor*)new UserInfoExecutor(read_buf,write_buf,user);
+                default:
+                    break;
+            }
+            return nullptr;
+        }
 
+};
