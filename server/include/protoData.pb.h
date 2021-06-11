@@ -46,7 +46,7 @@ struct TableStruct_protoData_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[9]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[10]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -63,6 +63,9 @@ extern CartItemDefaultTypeInternal _CartItem_default_instance_;
 class Discount;
 struct DiscountDefaultTypeInternal;
 extern DiscountDefaultTypeInternal _Discount_default_instance_;
+class DiscountArray;
+struct DiscountArrayDefaultTypeInternal;
+extern DiscountArrayDefaultTypeInternal _DiscountArray_default_instance_;
 class Goods;
 struct GoodsDefaultTypeInternal;
 extern GoodsDefaultTypeInternal _Goods_default_instance_;
@@ -86,6 +89,7 @@ PROTOBUF_NAMESPACE_OPEN
 template<> ::protoData::Cart* Arena::CreateMaybeMessage<::protoData::Cart>(Arena*);
 template<> ::protoData::CartItem* Arena::CreateMaybeMessage<::protoData::CartItem>(Arena*);
 template<> ::protoData::Discount* Arena::CreateMaybeMessage<::protoData::Discount>(Arena*);
+template<> ::protoData::DiscountArray* Arena::CreateMaybeMessage<::protoData::DiscountArray>(Arena*);
 template<> ::protoData::Goods* Arena::CreateMaybeMessage<::protoData::Goods>(Arena*);
 template<> ::protoData::GoodsArray* Arena::CreateMaybeMessage<::protoData::GoodsArray>(Arena*);
 template<> ::protoData::Transaction* Arena::CreateMaybeMessage<::protoData::Transaction>(Arena*);
@@ -1329,11 +1333,21 @@ class CartItem final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kUserFieldNumber = 1,
-    kGoodsFieldNumber = 2,
-    kCountFieldNumber = 3,
+    kIdFieldNumber = 1,
+    kUserFieldNumber = 2,
+    kGoodsFieldNumber = 3,
+    kCountFieldNumber = 4,
   };
-  // int32 user = 1;
+  // int32 id = 1;
+  void clear_id();
+  ::PROTOBUF_NAMESPACE_ID::int32 id() const;
+  void set_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::int32 _internal_id() const;
+  void _internal_set_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+  public:
+
+  // int32 user = 2;
   void clear_user();
   ::PROTOBUF_NAMESPACE_ID::int32 user() const;
   void set_user(::PROTOBUF_NAMESPACE_ID::int32 value);
@@ -1342,7 +1356,7 @@ class CartItem final :
   void _internal_set_user(::PROTOBUF_NAMESPACE_ID::int32 value);
   public:
 
-  // int32 goods = 2;
+  // int32 goods = 3;
   void clear_goods();
   ::PROTOBUF_NAMESPACE_ID::int32 goods() const;
   void set_goods(::PROTOBUF_NAMESPACE_ID::int32 value);
@@ -1351,7 +1365,7 @@ class CartItem final :
   void _internal_set_goods(::PROTOBUF_NAMESPACE_ID::int32 value);
   public:
 
-  // int32 count = 3;
+  // int32 count = 4;
   void clear_count();
   ::PROTOBUF_NAMESPACE_ID::int32 count() const;
   void set_count(::PROTOBUF_NAMESPACE_ID::int32 value);
@@ -1367,6 +1381,7 @@ class CartItem final :
   template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::int32 id_;
   ::PROTOBUF_NAMESPACE_ID::int32 user_;
   ::PROTOBUF_NAMESPACE_ID::int32 goods_;
   ::PROTOBUF_NAMESPACE_ID::int32 count_;
@@ -1640,7 +1655,7 @@ class Discount final :
   enum : int {
     kIdFieldNumber = 1,
     kTypeFieldNumber = 2,
-    kDisocuntFieldNumber = 4,
+    kDiscountFieldNumber = 4,
     kThresholdFieldNumber = 5,
     kOperandFieldNumber = 3,
   };
@@ -1662,13 +1677,13 @@ class Discount final :
   void _internal_set_type(::PROTOBUF_NAMESPACE_ID::int32 value);
   public:
 
-  // double disocunt = 4;
-  void clear_disocunt();
-  double disocunt() const;
-  void set_disocunt(double value);
+  // double discount = 4;
+  void clear_discount();
+  double discount() const;
+  void set_discount(double value);
   private:
-  double _internal_disocunt() const;
-  void _internal_set_disocunt(double value);
+  double _internal_discount() const;
+  void _internal_set_discount(double value);
   public:
 
   // double threshold = 5;
@@ -1698,9 +1713,157 @@ class Discount final :
   typedef void DestructorSkippable_;
   ::PROTOBUF_NAMESPACE_ID::int32 id_;
   ::PROTOBUF_NAMESPACE_ID::int32 type_;
-  double disocunt_;
+  double discount_;
   double threshold_;
   ::PROTOBUF_NAMESPACE_ID::int32 operand_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_protoData_2eproto;
+};
+// -------------------------------------------------------------------
+
+class DiscountArray final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:protoData.DiscountArray) */ {
+ public:
+  inline DiscountArray() : DiscountArray(nullptr) {}
+  ~DiscountArray() override;
+  explicit constexpr DiscountArray(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  DiscountArray(const DiscountArray& from);
+  DiscountArray(DiscountArray&& from) noexcept
+    : DiscountArray() {
+    *this = ::std::move(from);
+  }
+
+  inline DiscountArray& operator=(const DiscountArray& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline DiscountArray& operator=(DiscountArray&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const DiscountArray& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const DiscountArray* internal_default_instance() {
+    return reinterpret_cast<const DiscountArray*>(
+               &_DiscountArray_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    9;
+
+  friend void swap(DiscountArray& a, DiscountArray& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(DiscountArray* other) {
+    if (other == this) return;
+    if (GetOwningArena() == other->GetOwningArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(DiscountArray* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline DiscountArray* New() const final {
+    return new DiscountArray();
+  }
+
+  DiscountArray* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<DiscountArray>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const DiscountArray& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const DiscountArray& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message*to, const ::PROTOBUF_NAMESPACE_ID::Message&from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(DiscountArray* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "protoData.DiscountArray";
+  }
+  protected:
+  explicit DiscountArray(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kDiscountFieldNumber = 1,
+  };
+  // repeated .protoData.Discount discount = 1;
+  int discount_size() const;
+  private:
+  int _internal_discount_size() const;
+  public:
+  void clear_discount();
+  ::protoData::Discount* mutable_discount(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::protoData::Discount >*
+      mutable_discount();
+  private:
+  const ::protoData::Discount& _internal_discount(int index) const;
+  ::protoData::Discount* _internal_add_discount();
+  public:
+  const ::protoData::Discount& discount(int index) const;
+  ::protoData::Discount* add_discount();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::protoData::Discount >&
+      discount() const;
+
+  // @@protoc_insertion_point(class_scope:protoData.DiscountArray)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::protoData::Discount > discount_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_protoData_2eproto;
 };
@@ -2533,7 +2696,27 @@ inline void Transaction::set_timestamp(::PROTOBUF_NAMESPACE_ID::int64 value) {
 
 // CartItem
 
-// int32 user = 1;
+// int32 id = 1;
+inline void CartItem::clear_id() {
+  id_ = 0;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 CartItem::_internal_id() const {
+  return id_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 CartItem::id() const {
+  // @@protoc_insertion_point(field_get:protoData.CartItem.id)
+  return _internal_id();
+}
+inline void CartItem::_internal_set_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  
+  id_ = value;
+}
+inline void CartItem::set_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  _internal_set_id(value);
+  // @@protoc_insertion_point(field_set:protoData.CartItem.id)
+}
+
+// int32 user = 2;
 inline void CartItem::clear_user() {
   user_ = 0;
 }
@@ -2553,7 +2736,7 @@ inline void CartItem::set_user(::PROTOBUF_NAMESPACE_ID::int32 value) {
   // @@protoc_insertion_point(field_set:protoData.CartItem.user)
 }
 
-// int32 goods = 2;
+// int32 goods = 3;
 inline void CartItem::clear_goods() {
   goods_ = 0;
 }
@@ -2573,7 +2756,7 @@ inline void CartItem::set_goods(::PROTOBUF_NAMESPACE_ID::int32 value) {
   // @@protoc_insertion_point(field_set:protoData.CartItem.goods)
 }
 
-// int32 count = 3;
+// int32 count = 4;
 inline void CartItem::clear_count() {
   count_ = 0;
 }
@@ -2701,24 +2884,24 @@ inline void Discount::set_operand(::PROTOBUF_NAMESPACE_ID::int32 value) {
   // @@protoc_insertion_point(field_set:protoData.Discount.operand)
 }
 
-// double disocunt = 4;
-inline void Discount::clear_disocunt() {
-  disocunt_ = 0;
+// double discount = 4;
+inline void Discount::clear_discount() {
+  discount_ = 0;
 }
-inline double Discount::_internal_disocunt() const {
-  return disocunt_;
+inline double Discount::_internal_discount() const {
+  return discount_;
 }
-inline double Discount::disocunt() const {
-  // @@protoc_insertion_point(field_get:protoData.Discount.disocunt)
-  return _internal_disocunt();
+inline double Discount::discount() const {
+  // @@protoc_insertion_point(field_get:protoData.Discount.discount)
+  return _internal_discount();
 }
-inline void Discount::_internal_set_disocunt(double value) {
+inline void Discount::_internal_set_discount(double value) {
   
-  disocunt_ = value;
+  discount_ = value;
 }
-inline void Discount::set_disocunt(double value) {
-  _internal_set_disocunt(value);
-  // @@protoc_insertion_point(field_set:protoData.Discount.disocunt)
+inline void Discount::set_discount(double value) {
+  _internal_set_discount(value);
+  // @@protoc_insertion_point(field_set:protoData.Discount.discount)
 }
 
 // double threshold = 5;
@@ -2741,9 +2924,55 @@ inline void Discount::set_threshold(double value) {
   // @@protoc_insertion_point(field_set:protoData.Discount.threshold)
 }
 
+// -------------------------------------------------------------------
+
+// DiscountArray
+
+// repeated .protoData.Discount discount = 1;
+inline int DiscountArray::_internal_discount_size() const {
+  return discount_.size();
+}
+inline int DiscountArray::discount_size() const {
+  return _internal_discount_size();
+}
+inline void DiscountArray::clear_discount() {
+  discount_.Clear();
+}
+inline ::protoData::Discount* DiscountArray::mutable_discount(int index) {
+  // @@protoc_insertion_point(field_mutable:protoData.DiscountArray.discount)
+  return discount_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::protoData::Discount >*
+DiscountArray::mutable_discount() {
+  // @@protoc_insertion_point(field_mutable_list:protoData.DiscountArray.discount)
+  return &discount_;
+}
+inline const ::protoData::Discount& DiscountArray::_internal_discount(int index) const {
+  return discount_.Get(index);
+}
+inline const ::protoData::Discount& DiscountArray::discount(int index) const {
+  // @@protoc_insertion_point(field_get:protoData.DiscountArray.discount)
+  return _internal_discount(index);
+}
+inline ::protoData::Discount* DiscountArray::_internal_add_discount() {
+  return discount_.Add();
+}
+inline ::protoData::Discount* DiscountArray::add_discount() {
+  ::protoData::Discount* _add = _internal_add_discount();
+  // @@protoc_insertion_point(field_add:protoData.DiscountArray.discount)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::protoData::Discount >&
+DiscountArray::discount() const {
+  // @@protoc_insertion_point(field_list:protoData.DiscountArray.discount)
+  return discount_;
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

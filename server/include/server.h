@@ -16,84 +16,6 @@ extern "C" {
 using std::fstream;
 using std::string;
 
-class Parser{
-    //处理报文
-    public:
-        void parse(char buffer[]);
-        
-        void write_header_good(char write_buf[]);
-        void write_header_error(char write_buf[]); 
-        void write_header_authenticate_error(char write_buf[]);
-
-};
-
-
-
-class UserRecordWriter{
-    public:
-        // typedef std::shared_ptr<User> (*p_user_construct)(UserData *);
-        static constexpr const char* USER_FILE_NAME="user-record.txt";
-        static UserRecordWriter& get_record(){
-            static UserRecordWriter manager;//单例模式
-            return manager;
-        }
-        
-        bool exist (const std::string& name) {
-            struct stat buffer;   
-            return (stat (name.c_str(), &buffer) == 0); 
-        }
-
-        /*
-        * 登录功能和鉴权
-        */
-        string login(const protoData::UserForm & form);
-        bool logout(protoData::User*user);
-        bool check_password(protoData::User*user,const string& password);
-        bool _register(protoData::UserForm & form);
-        void update(protoData::User&);
-
-        protoData::User* get_user_by_token(const char* token);
-        protoData::User* get_user_by_username(const string&username);
-        
-        
-    private:
-        UserRecordWriter();
-        ~UserRecordWriter(){}
-        UserRecordWriter(const UserRecordWriter&){};
-        UserRecordWriter& operator=(const UserRecordWriter&);
-
-
-        /*
-        * 内存缓冲
-        */
-        std::map<int,std::string> id_to_token;
-        std::map<std::string,int> token_to_id;//token和ID
-        std::map<std::string,protoData::User> name_to_data;
-        std::map<int,std::string> id_to_name;
-        int max_pk;
-
-        /*
-        * 文件操作
-        */
-        std::fstream database;
-        int load();
-        // static constexpr int MAX_LINE = sizeof(UserData) + 10;
-        static constexpr int MAX_LINE = 256;
-        static constexpr int TOKEN_SIZE = 16;
-
-        
-        void insert_data(protoData::UserForm& user);
-        
-        void remove_data(int id);
-        void set_write_cursor_to_nth_line(int id);
-        void set_read_cursor_to_nth_line(int  id);
-        void write_LF_nth_line(int id);
-        string generate_token();
-};
-
-
-
-
 class Executor{
     //执行器
     public:
@@ -124,6 +46,12 @@ class Executor{
         protoData::User* user;
 };
 
+/*
+命名规范:
+lambda x:print(x.lower().replace("_"," ").title().replace(" ","")+"Executor")
+可以用template来实现下面一堆函数
+*/
+
 class UserLoginExecutor: public Executor{
     public:
         UserLoginExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1,PERMISSION_ANY){}
@@ -153,9 +81,141 @@ class UserAuthenticatePasswordExecutor:public Executor{
         UserAuthenticatePasswordExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
         void execImp()override;
 };
+
 class UserInfoExecutor:public Executor{
     public:
         UserInfoExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+
+
+
+class GoodsCreateExecutor:public Executor{
+    public:
+        GoodsCreateExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;    
+};
+
+class GoodsGetByIdExecutor:public Executor{
+    public:
+        GoodsGetByIdExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class GoodsGetByIDMultipleExecutor:public Executor{
+    public:
+        GoodsGetByIDMultipleExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class GoodsGetBySellerExecutor:public Executor{
+    public:
+        GoodsGetBySellerExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class GoodsGetAllExecutor:public Executor{
+    public:
+        GoodsGetAllExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class GoodsGetByNameExecutor:public Executor{
+    public:
+        GoodsGetByNameExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class GoodsUpdateExecutor:public Executor{
+    public:
+        GoodsUpdateExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class GoodsRemoveExecutor:public Executor{
+    public:
+        GoodsRemoveExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+
+/**
+ * @brief discount
+ * 
+ */
+class DiscountCreateExecutor:public Executor{
+    public:
+        DiscountCreateExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class DisocuntUpdateExecutor:public Executor{
+    public:
+        DisocuntUpdateExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class DiscountGetAllCategoryExecutor:public Executor{
+    public:
+        DiscountGetAllCategoryExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+
+class DiscountGetGoodsDiscountExecutor:public Executor{
+    public:
+        DiscountGetGoodsDiscountExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class DiscountGetCategoryDiscountExecutor:public Executor{
+    public:
+        DiscountGetCategoryDiscountExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+
+class DiscountRemoveByGoodsExecutor:public Executor{
+    public:
+        DiscountRemoveByGoodsExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+
+class DiscountRemoveExecutor:public Executor{
+    public:
+        DiscountRemoveExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+
+
+class TransactionGetExecutor:public Executor{
+    public:
+        TransactionGetExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+
+class TransactionGetByUserExecutor:public Executor{
+    public:
+        TransactionGetByUserExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class TransactionSetExecutor:public Executor{
+    public:
+        TransactionSetExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+
+class TransactionCancelExecutor:public Executor{
+    public:
+        TransactionCancelExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class TransactionSetFinishedExecutor:public Executor{
+    public:
+        TransactionSetFinishedExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class CartGetExecutor:public Executor{
+    public:
+        CartGetExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class CartSetExecutor:public Executor{
+    public:
+        CartSetExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        void execImp()override;
+};
+class CartRemoveExecutor:public Executor{
+    public:
+        CartRemoveExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
         void execImp()override;
 };
 
@@ -180,10 +240,59 @@ class ExecutorFactory{
                     return (Executor*)new UserAuthenticatePasswordExecutor(read_buf,write_buf,user);
                 case Protocol::USER_INFO:
                     return (Executor*)new UserInfoExecutor(read_buf,write_buf,user);
+
+                case Protocol::GOOOS_CREATE:
+                    return (Executor*)new GoodsCreateExecutor(read_buf,write_buf,user);
+                case Protocol::GOOOS_GET_BY_ID:
+                    return (Executor*)new GoodsGetByIdExecutor(read_buf,write_buf,user);
+                case Protocol::GOODS_GET_BY_ID_MULITIPLE:
+                    return (Executor*)new GoodsGetByIDMultipleExecutor(read_buf,write_buf,user);
+                case Protocol::GOODS_GET_BY_SELLER:
+                    return (Executor*)new GoodsGetBySellerExecutor(read_buf,write_buf,user);
+                case Protocol::GOODS_GET_ALL:
+                    return (Executor*)new GoodsGetAllExecutor(read_buf,write_buf,user);
+                case Protocol::GOODS_GET_BY_NAME:
+                    return (Executor*)new GoodsGetByNameExecutor(read_buf,write_buf,user);
+                case Protocol::GOODS_UPDATE:
+                    return (Executor*)new GoodsUpdateExecutor(read_buf,write_buf,user);                                      
+                case Protocol::GOODS_REMOVE:
+                    return (Executor*)new GoodsRemoveExecutor(read_buf,write_buf,user);   
+
+                case Protocol::DISCOUNT_CREATE:
+                    return (Executor*)new DiscountCreateExecutor(read_buf,write_buf,user); 
+                case Protocol::DISOCUNT_UPDATE:
+                    return (Executor*)new DisocuntUpdateExecutor(read_buf,write_buf,user);        
+                case Protocol::DISCOUNT_GET_ALL_CATEGORY:
+                    return (Executor*)new DiscountGetAllCategoryExecutor(read_buf,write_buf,user); 
+                case Protocol::DISCOUNT_GET_GOODS_DISCOUNT:
+                    return (Executor*)new DiscountGetGoodsDiscountExecutor(read_buf,write_buf,user); 
+                case Protocol::DISCOUNT_GET_CATEGORY_DISCOUNT:
+                    return (Executor*)new DiscountGetCategoryDiscountExecutor(read_buf,write_buf,user); 
+                case Protocol::DISCOUNT_REMOVE_BY_GOODS:
+                    return (Executor*)new DiscountRemoveByGoodsExecutor(read_buf,write_buf,user); 
+                case Protocol::DISCOUNT_REMOVE:
+                    return (Executor*)new DiscountRemoveExecutor(read_buf,write_buf,user); 
+
+                case Protocol::TRANSACTION_GET_BY_USER:
+                    return (Executor*)new TransactionGetByUserExecutor(read_buf,write_buf,user); 
+                case Protocol::TRANSACTION_GET:
+                    return (Executor*)new TransactionGetExecutor(read_buf,write_buf,user); 
+                case Protocol::TRANSACTION_SET:
+                    return (Executor*)new TransactionSetExecutor(read_buf,write_buf,user);                                      
+                case Protocol::TRANSACTION_CANCEL:
+                    return (Executor*)new TransactionCancelExecutor(read_buf,write_buf,user);     
+                case Protocol::TRANSACTION_SET_FINISHED:
+                    return (Executor*)new TransactionSetFinishedExecutor(read_buf,write_buf,user);   
+                    
+                case Protocol::CART_GET:
+                    return (Executor*)new CartGetExecutor(read_buf,write_buf,user);   
+                case Protocol::CART_SET:
+                    return (Executor*)new CartSetExecutor(read_buf,write_buf,user);  
+                case Protocol::CART_REMOVE:
+                    return (Executor*)new CartRemoveExecutor(read_buf,write_buf,user);   
                 default:
-                    break;
+                    return nullptr;
             }
-            return nullptr;
         }
 
 };

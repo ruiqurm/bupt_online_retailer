@@ -1,7 +1,9 @@
+set(CMAKE_CXX_FLAGS,"-Wall")
+add_library(sqlite3 STATIC sqlite3.c)
+target_link_libraries(sqlite3 pthread dl)
 
-# protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS protoData.proto)
-# protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS EXPORT_MACRO DLL_EXPORT protoData.proto)
-add_library(protocol log.c protoData.pb.cc)
-target_link_libraries(protocol protobuf pthread)
-add_executable(server main.cpp server.cpp log.c protoData.pb.cc)
-target_link_libraries(server protobuf pthread)
+add_library(protocol protocol.cpp log.c protoData.pb.cc)
+target_link_libraries(protocol protobuf sqlite3 pthread)
+
+add_executable(server main.cpp server.cpp protocol.cpp database.cpp log.c protoData.pb.cc)
+target_link_libraries(server protobuf sqlite3 pthread)

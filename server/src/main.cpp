@@ -98,7 +98,9 @@ void handle_with_request(int sockfd){
             user = executor->get_user();
         }
         n = send(sockfd,write_buffer,executor->size(),0);
-        if (n <= 0) {log_error("ERROR writing from socket");break;}
+        if (n <= 0) {delete executor;executor = nullptr;;log_error("ERROR writing from socket");break;}
+        delete executor;
+        executor = nullptr;
     }
     close(sockfd);
 }

@@ -41,9 +41,10 @@ message Transaction{
     int64 timestamp = 9;
 }
 message CartItem{
-    int32 user = 1;
-    int32 goods = 2;
-    int32 count = 3; 
+    int32 id = 1;
+    int32 user = 2;
+    int32 goods = 3;
+    int32 count = 4; 
 }
 message Cart{
     repeated CartItem item = 1;
@@ -53,6 +54,9 @@ message Discount{
     int32 id = 1;
     int32 type = 2;
     int32 operand = 3;
-    double disocunt = 4;
+    double discount = 4;
     double threshold = 5;
+}
+message DiscountArray{
+    repeated Discount discount = 1;
 }

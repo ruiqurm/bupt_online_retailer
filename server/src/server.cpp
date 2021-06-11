@@ -1,236 +1,12 @@
 #include"server.h"
 #include"protocol.h"
-
+#include"database.h"
 extern "C" {
 #include"log.h"
 }
 
-//简单的异常保存
+
 string last_error;
-
-/********************
- *                  *
- * UserRecordWriter *
- *                  *  
- ********************/
-string UserRecordWriter::login(const protoData::UserForm & form){
-
-    auto it = name_to_data.find(form.username());
-    if(it!=name_to_data.end()){
-        log_info("找到名字");
-        if (it->second.password()==form.password()){
-            auto iit = id_to_token.find(it->second.id());
-            if(iit!=id_to_token.end()){
-                //已经登录
-                return iit->second;
-            }else{
-                string s = generate_token();
-                token_to_id[s] = it->second.id();
-                id_to_token[it->second.id()] = s;
-                return s;
-            }
-        }
-    }
-    return string();
-}
-bool UserRecordWriter::logout(protoData::User*user){
-    if(user!=nullptr){
-        auto it = id_to_token.find(user->id());
-        if(it!=id_to_token.end()){
-            token_to_id.erase(it->second);
-            id_to_token.erase(it);
-            return true;
-        }
-    }
-    return false;
-}
-
-bool UserRecordWriter::_register(protoData::UserForm & form){
-    /**
-     * @brief 只检查是否存在，用户名和密码是否带空白符
-     * 
-     */
-    log_info("注册账号，用户名为%s,密码为%s",form.username().c_str(),form.password().c_str());
-    auto it = name_to_data.find(form.username());
-    if(it != name_to_data.end()){
-        last_error = "account has been registered";
-        log_debug("账号已存在");
-        return false;
-    } 
-    char*c= const_cast<char*>(form.username().c_str());
-    int i=0;
-    for(auto &c:form.username()){
-        i++;
-        if(isspace(c)){
-            log_error("不允许空格");
-            last_error = "disallow space character";
-            return false;
-        }
-    }
-    if(i>32){
-        log_error("用户名过长");
-        last_error = "username too long";
-        return false;
-    }
-    for(auto&c:form.password()){
-        i++;
-        if(isspace(c)){
-            log_error("不允许空格");
-            last_error = "disallow space character";
-            return false;
-        }
-    }  
-    if(i>16){
-        log_error("密码过长");
-        last_error = "password too long";
-        return false;
-    }
-    insert_data(form);
-    protoData::User u;
-    u.set_id(max_pk);
-    u.set_username(form.username());
-    u.set_password(form.password());
-    u.set_type(form.type());
-    name_to_data[form.username()] = u;
-    id_to_name[max_pk] = form.username();
-    log_info("注册账号成功");
-    return true;
-}
-protoData::User* UserRecordWriter::get_user_by_token(const char*token){
-    char tmp[TOKEN_SIZE+2];
-    memcpy(tmp,token,16);
-    tmp[TOKEN_SIZE] = 0;
-    auto it =  token_to_id.find(tmp);
-    if(it!=token_to_id.end()){
-        auto iit = id_to_name.find(it->second);
-        log_info("id=%d",it->second);
-        if(iit!=id_to_name.end()){
-            log_info("name=%s",iit->second.c_str());
-            auto iiit = name_to_data.find(iit->second);
-            if(iiit!=name_to_data.end()){
-                return &iiit->second;
-            }
-        }
-        
-    }
-    // for(auto&it:token_to_id){
-    //     std::cout<<"token = "<<it.first<<" id="<<it.second<<std::endl;
-    // }
-    log_error("无此用户,token=%.16s",tmp);
-    return nullptr;
-}
-protoData::User*  UserRecordWriter::get_user_by_username(const string&username){
-    auto it =  name_to_data.find(username);
-    if(it!=name_to_data.end()){
-        return &it->second;
-    }else{
-        return nullptr;
-    }
-}
-bool UserRecordWriter::check_password(protoData::User* user,const string& password){
-    return user->password() == password;
-}
-UserRecordWriter::UserRecordWriter(){
-    if (exist(USER_FILE_NAME)){
-        load();
-        database.open(USER_FILE_NAME,std::ios::in|std::ios::out);
-    //不会覆盖原来的内容
-    }else{
-        database.open(USER_FILE_NAME,std::ios::out);
-    }
-    if (!database.is_open()){
-        throw "can't open user record file.";
-    }
-    log_debug("init user-record done");
-}
-int UserRecordWriter::load(){
-    int count=0,i=0;
-    std::ifstream f(USER_FILE_NAME);
-    if (!name_to_data.empty())name_to_data.clear();
-    if (!id_to_name.empty())id_to_name.clear();
-    protoData::User tmpdata;
-    max_pk=0;
-    double tmpfloat;
-    int tmpint;
-    string tmpstr;
-    while(f>>tmpint){
-        tmpdata.set_id(tmpint);
-        if(tmpdata.id()!=0){
-            f>>tmpstr;
-            tmpdata.set_username(tmpstr);
-            f>>tmpstr;
-            tmpdata.set_password(tmpstr);
-            f>>tmpfloat;
-            tmpdata.set_balance(tmpfloat);
-            f>>tmpint;
-            name_to_data.emplace(tmpdata.username(),tmpdata);
-            id_to_name.emplace(tmpdata.id(),tmpdata.username());
-            max_pk = std::max(max_pk,tmpdata.id());
-            count++;
-        }
-        f.seekg(i+MAX_LINE);
-        i+=MAX_LINE;
-    }
-    return count;
-}
-void UserRecordWriter::insert_data(protoData::UserForm& data){
-    max_pk++;
-    int id = max_pk;
-    set_write_cursor_to_nth_line(id);
-    database<<id<<" "<<data.username()<<" "<<data.password()<<" "<<0<<" "<<data.type()<<"\0\0\0";
-    write_LF_nth_line(id);
-}
-void UserRecordWriter::update(protoData::User& data){
-    if(data.id()<=0){
-        //这段不会执行
-        max_pk++;
-        data.set_id(max_pk);
-        data.set_balance(0);
-    }
-    // log_info("id=%d,username=%s,password=%s",data.id(),data.username().c_str(),data.password().c_str());
-    set_write_cursor_to_nth_line(data.id());
-    // std::cout<<data.password()<<std::endl;
-    std::cout<<data.id()<<" "<<data.username()<<" "<<data.password()<<" "<<data.balance()<<" "<<data.type()<<std::endl;
-    database<<data.id()<<" "<<data.username()<<" "<<data.password()<<" "<<data.balance()<<" "<<data.type();
-    database.put('\0');database.put('\0');
-    write_LF_nth_line(data.id());
-    name_to_data[data.username()] = data;
-}
-void UserRecordWriter::remove_data(int id){
-    if(id<=0)return;
-    //不判断是否存在了.
-    set_write_cursor_to_nth_line(id);
-    database<<"0\0";database.flush();
-    // write_LF_nth_line(id);
-}
-string UserRecordWriter::generate_token(){
-    char tmp_s[TOKEN_SIZE+2];
-    static const char alphanum[] =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-
-    srand( (unsigned) time(NULL) * getpid());
-    for (int i = 0; i < TOKEN_SIZE; ++i) 
-        tmp_s[i] =  alphanum[rand() % (sizeof(alphanum) - 1)];
-    tmp_s[TOKEN_SIZE] = 0;
-    return string(tmp_s);
-}
-void UserRecordWriter::write_LF_nth_line(int id){
-    #if WIN32
-    database.seekp(id*MAX_LINE -2);
-    #else
-    database.seekp(id*MAX_LINE -1);
-    #endif
-    database<<'\n';
-}
-void UserRecordWriter::set_write_cursor_to_nth_line(int id){
-    database.seekp((id-1)*(MAX_LINE));
-}
-void UserRecordWriter::set_read_cursor_to_nth_line(int  id){
-    database.seekg((id-1)*(MAX_LINE));
-}
-
 
 /********************
  *                  *
@@ -355,4 +131,299 @@ void UserAuthenticatePasswordExecutor::execImp(){
 void UserInfoExecutor::execImp(){
     set_length(user->ByteSizeLong());
     user->SerializeToArray(write_data,user->ByteSizeLong());
+}
+
+
+/*
+ *
+ * Goods Executor 
+ * 
+ */
+void GoodsCreateExecutor::execImp(){
+    protoData::Goods goods;
+    goods.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("创建商品\nid=%d\nname=%s\nprice=%f\ndescription=%s\ncount=%d",goods.id(),goods.name().c_str(),goods.price(),goods.description().c_str(),goods.remain());
+    GoodsDatabase database;
+    int id=  database.create(goods);
+    goods.set_id(id);
+    goods.SerializeToArray(write_data,goods.ByteSizeLong());
+    set_length(goods.ByteSizeLong());
+}
+void GoodsGetByIdExecutor::execImp(){
+    protoData::Goods goods;
+    goods.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("获取商品id=%d",goods.id());
+    if(goods.id()>0){
+        GoodsDatabase database;
+        database.get(goods);
+        goods.SerializeToArray(write_data,goods.ByteSizeLong());
+        set_length(goods.ByteSizeLong());
+    }else{
+        set_error(Protocol::PARAMETER_ERROR);
+    }
+}
+void GoodsGetByIDMultipleExecutor::execImp(){
+    protoData::GoodsArray array;
+    array.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("获取多个商品");
+    if(array.goods_size()>0){
+        GoodsDatabase database;
+        database.get(array);
+        array.SerializeToArray(write_data,array.ByteSizeLong());
+        set_length(array.ByteSizeLong());
+        log_debug("返回了%d个商品",array.goods_size());
+    }else{
+        set_error(Protocol::PARAMETER_ERROR);
+    }
+}
+void GoodsGetBySellerExecutor::execImp(){
+    protoData::Goods goods;
+    protoData::GoodsArray array;
+    goods.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("获取商家id=%d的商品",goods.seller());
+    if(goods.seller()>0){
+        GoodsDatabase database;
+        database.get_user_goods(goods.seller(),array);
+        array.SerializeToArray(write_data,array.ByteSizeLong());
+        set_length(array.ByteSizeLong());
+        log_debug("返回了%d个商品",array.goods_size());
+    }else{
+        set_error(Protocol::PARAMETER_ERROR);
+    }
+}
+void GoodsGetAllExecutor::execImp(){
+    protoData::GoodsArray array;
+    log_debug("获取全部商品");
+    GoodsDatabase database;
+    database.get_all_goods(array);
+    array.SerializeToArray(write_data,array.ByteSizeLong());
+    set_length(array.ByteSizeLong());
+    log_debug("返回了%d个商品",array.goods_size());
+}
+void GoodsGetByNameExecutor::execImp(){
+    protoData::Goods goods;
+    protoData::GoodsArray array;
+    goods.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("获取名字和' %s '相近的商品",goods.name().c_str());
+    if(goods.name().size()>0){
+        GoodsDatabase database;
+        database.get_goods_by_name(goods.name(),array);
+        array.SerializeToArray(write_data,array.ByteSizeLong());
+        set_length(array.ByteSizeLong());
+        log_debug("返回了%d个商品",array.goods_size());
+    }else{
+        set_error(Protocol::PARAMETER_ERROR);
+    }
+}
+void GoodsUpdateExecutor::execImp(){
+    protoData::Goods goods;
+    goods.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("更新商品\nid=%d\nname=%s\nprice=%f\ndescription=%s\ncount=%d",goods.id(),goods.name().c_str(),goods.price(),goods.description().c_str(),goods.remain());
+    if(goods.id()>0){
+        GoodsDatabase database;
+        database.update(goods);
+        goods.SerializeToArray(write_data,goods.ByteSizeLong());
+        set_length(goods.ByteSizeLong());
+    }else{
+        set_error(Protocol::PARAMETER_ERROR);
+    }
+}
+void GoodsRemoveExecutor::execImp(){
+    protoData::Goods goods;
+    goods.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("删除商品");
+    if(goods.id()>0){
+        GoodsDatabase database;
+        database.remove(goods);
+    }else{
+        set_error(Protocol::PARAMETER_ERROR);
+    }
+}
+
+
+/*
+ *
+ * Discount Executor 
+ * 
+ */
+void DiscountCreateExecutor::execImp(){
+    protoData::Discount discount;
+    discount.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("创建discount\n"\
+             "type=%d\n"\
+             "operand=%d\n"\
+             "discount=%f\n"\
+             "threshold=%f\n",
+    discount.type(),discount.operand(),discount.discount(),discount.threshold());
+    DiscountDatabase database;
+    int id = database.create(discount);
+    discount.set_id(id);
+    discount.SerializeToArray(write_data,discount.ByteSizeLong());
+    set_length(discount.ByteSizeLong());
+}
+
+void DisocuntUpdateExecutor::execImp(){
+    protoData::Discount discount;
+    discount.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("更新discount\n"\
+            "id=%d\n"\
+            "type=%d\n"\
+            "operand=%d\n"\
+            "discount=%f\n"\
+            "threshold=%f\n",
+    discount.id(),discount.type(),discount.operand(),discount.discount(),discount.threshold());
+    if(discount.id()>0){
+        DiscountDatabase database;
+        database.update(discount);
+        discount.SerializeToArray(write_data,discount.ByteSizeLong());
+        set_length(discount.ByteSizeLong());
+    }else{
+        set_error(Protocol::PARAMETER_ERROR);
+    }
+}
+void DiscountGetAllCategoryExecutor::execImp(){
+    protoData::Discount discount;
+    discount.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    protoData::DiscountArray array;
+    DiscountDatabase database;
+    database.get_all_category_discount(discount,array);
+    log_debug("获取类别为type=%d的所有记录共%d条",discount.type(),array.discount_size());
+    array.SerializeToArray(write_data,array.ByteSizeLong());
+    set_length(array.ByteSizeLong());
+}
+void DiscountGetGoodsDiscountExecutor::execImp(){
+    protoData::Discount discount;
+    discount.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("获取关于商品%d的打折记录",discount.operand());
+    DiscountDatabase database;
+    database.get_goods_discount(discount);
+    discount.SerializeToArray(write_data,discount.ByteSizeLong());
+    set_length(discount.ByteSizeLong());
+}
+void DiscountGetCategoryDiscountExecutor::execImp(){
+    protoData::Discount discount;
+    discount.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("获取关于商品类别%d的打折记录",discount.operand());
+    DiscountDatabase database;
+    database.get_category_discount(discount);
+    discount.SerializeToArray(write_data,discount.ByteSizeLong());
+    set_length(discount.ByteSizeLong());
+}
+void DiscountRemoveByGoodsExecutor::execImp(){
+    protoData::Discount discount;
+    discount.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("删除关于商品%d的打折记录",discount.operand());
+    DiscountDatabase database;
+    database.remove_by_goods(discount);
+    // discount.SerializeToArray(write_data,discount.ByteSizeLong());
+    // set_length(discount.ByteSizeLong());
+}
+void DiscountRemoveExecutor::execImp(){
+    protoData::Discount discount;
+    discount.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    log_debug("删除id为%d的打折记录",discount.id());
+    DiscountDatabase database;
+    database.remove(discount);
+}
+/*
+ *
+ * Transaction Executor 
+ * 
+ */
+void TransactionGetExecutor::execImp(){
+    protoData::Transaction transcation;
+    transcation.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    if(transcation.id()>0){
+        TransactionDatabase database;
+        database.get(transcation);
+        log_debug("获取id=%d的记录",transcation.id());
+        transcation.SerializeToArray(write_data,transcation.ByteSizeLong());
+        set_length(transcation.ByteSizeLong());
+    }else{
+        set_error(Protocol::PARAMETER_ERROR);
+    }
+}
+void TransactionGetByUserExecutor::execImp(){
+    protoData::Transaction transcation;
+    protoData::TransactionArray array;
+    transcation.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    TransactionDatabase database;
+    database.get_transaction(transcation,array);
+    log_debug("获取到和%d有关的记录共%d条",transcation.from(),array.transaction_size());
+    array.SerializeToArray(write_data,array.ByteSizeLong());
+    set_length(array.ByteSizeLong());
+}
+void TransactionSetExecutor::execImp(){
+    protoData::Transaction transcation;
+    transcation.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    TransactionDatabase database;
+    int id = database.set(transcation);
+    transcation.set_id(id);
+    log_debug("创建新的transaction\n"\
+              "id=%d\n"\
+              "from=%d\n"\
+              "from_name=%s\n"\
+              "to=%d\n"\
+              "to_name=%s\n"\
+              "finished=%d\n"\
+              "volume=%f\n"\
+              "detail=%s\n"\
+              "timestamp=%ld",
+     transcation.id(),
+     transcation.from(),transcation.from_name().c_str(),transcation.to(),transcation.to_name().c_str(),
+     transcation.finished(),transcation.volume(),transcation.detail().c_str(),
+     transcation.timestamp());
+    transcation.SerializeToArray(write_data,transcation.ByteSizeLong());
+    set_length(transcation.ByteSizeLong());
+}
+void TransactionCancelExecutor::execImp(){
+    protoData::Transaction transcation;
+    transcation.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    TransactionDatabase database;
+    log_debug("id=%d 的transaction取消订单",transcation.id());
+    database.cancel(transcation);
+}
+void TransactionSetFinishedExecutor::execImp(){
+    protoData::Transaction transcation;
+    transcation.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    TransactionDatabase database;
+    log_debug("id=%d 的transaction完成订单",transcation.id());
+    database.set_finished(transcation);
+}
+/*
+ *
+ * Cart Executor 
+ * 
+ */
+void CartGetExecutor::execImp(){
+    protoData::CartItem item;
+    item.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    CartDatabase database;
+    protoData::Cart cart;
+    database.get(item,cart);
+    log_debug("获取用户%d的购物车数据共%d条",item.user(),cart.item_size());
+    cart.SerializeToArray(write_data,cart.ByteSizeLong());
+    set_length(cart.ByteSizeLong());
+}
+void CartSetExecutor::execImp(){
+    protoData::CartItem item;
+    item.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    CartDatabase database;
+    int id = database.set(item);
+    item.set_id(id);
+    log_debug("添加购物车数据一条\n"\
+              "id=%d\n"\
+              "user=%d\n"\
+              "goods=%d\n"\
+              "count=%d",
+    item.id(),item.user(),item.goods(),item.count());
+    item.SerializeToArray(write_data,item.ByteSizeLong());
+    set_length(item.ByteSizeLong());
+}
+void CartRemoveExecutor::execImp(){
+    protoData::CartItem item;
+    item.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    CartDatabase database;
+    database.remove(item);
+    log_debug("删除一条item id=%d",item.id());
 }

@@ -111,7 +111,8 @@ struct TransactionDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT TransactionDefaultTypeInternal _Transaction_default_instance_;
 constexpr CartItem::CartItem(
   ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
-  : user_(0)
+  : id_(0)
+  , user_(0)
   , goods_(0)
   , count_(0){}
 struct CartItemDefaultTypeInternal {
@@ -139,7 +140,7 @@ constexpr Discount::Discount(
   ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
   : id_(0)
   , type_(0)
-  , disocunt_(0)
+  , discount_(0)
   , threshold_(0)
   , operand_(0){}
 struct DiscountDefaultTypeInternal {
@@ -151,8 +152,20 @@ struct DiscountDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT DiscountDefaultTypeInternal _Discount_default_instance_;
+constexpr DiscountArray::DiscountArray(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : discount_(){}
+struct DiscountArrayDefaultTypeInternal {
+  constexpr DiscountArrayDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~DiscountArrayDefaultTypeInternal() {}
+  union {
+    DiscountArray _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT DiscountArrayDefaultTypeInternal _DiscountArray_default_instance_;
 }  // namespace protoData
-static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_protoData_2eproto[9];
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_protoData_2eproto[10];
 static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_protoData_2eproto = nullptr;
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_protoData_2eproto = nullptr;
 
@@ -218,6 +231,7 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_protoData_2eproto::offsets[] P
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
+  PROTOBUF_FIELD_OFFSET(::protoData::CartItem, id_),
   PROTOBUF_FIELD_OFFSET(::protoData::CartItem, user_),
   PROTOBUF_FIELD_OFFSET(::protoData::CartItem, goods_),
   PROTOBUF_FIELD_OFFSET(::protoData::CartItem, count_),
@@ -235,8 +249,14 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_protoData_2eproto::offsets[] P
   PROTOBUF_FIELD_OFFSET(::protoData::Discount, id_),
   PROTOBUF_FIELD_OFFSET(::protoData::Discount, type_),
   PROTOBUF_FIELD_OFFSET(::protoData::Discount, operand_),
-  PROTOBUF_FIELD_OFFSET(::protoData::Discount, disocunt_),
+  PROTOBUF_FIELD_OFFSET(::protoData::Discount, discount_),
   PROTOBUF_FIELD_OFFSET(::protoData::Discount, threshold_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::protoData::DiscountArray, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  PROTOBUF_FIELD_OFFSET(::protoData::DiscountArray, discount_),
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::protoData::GoodsArray)},
@@ -246,8 +266,9 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOB
   { 36, -1, sizeof(::protoData::TransactionArray)},
   { 42, -1, sizeof(::protoData::Transaction)},
   { 56, -1, sizeof(::protoData::CartItem)},
-  { 64, -1, sizeof(::protoData::Cart)},
-  { 70, -1, sizeof(::protoData::Discount)},
+  { 65, -1, sizeof(::protoData::Cart)},
+  { 71, -1, sizeof(::protoData::Discount)},
+  { 81, -1, sizeof(::protoData::DiscountArray)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -260,6 +281,7 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::protoData::_CartItem_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::protoData::_Cart_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::protoData::_Discount_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::protoData::_DiscountArray_default_instance_),
 };
 
 const char descriptor_table_protodef_protoData_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
@@ -277,17 +299,18 @@ const char descriptor_table_protodef_protoData_2eproto[] PROTOBUF_SECTION_VARIAB
   "om\030\002 \001(\005\022\n\n\002to\030\003 \001(\005\022\021\n\tfrom_name\030\004 \001(\t\022"
   "\017\n\007to_name\030\005 \001(\t\022\020\n\010finished\030\006 \001(\010\022\016\n\006vo"
   "lume\030\007 \001(\001\022\016\n\006detail\030\010 \001(\t\022\021\n\ttimestamp\030"
-  "\t \001(\003\"6\n\010CartItem\022\014\n\004user\030\001 \001(\005\022\r\n\005goods"
-  "\030\002 \001(\005\022\r\n\005count\030\003 \001(\005\")\n\004Cart\022!\n\004item\030\001 "
-  "\003(\0132\023.protoData.CartItem\"Z\n\010Discount\022\n\n\002"
-  "id\030\001 \001(\005\022\014\n\004type\030\002 \001(\005\022\017\n\007operand\030\003 \001(\005\022"
-  "\020\n\010disocunt\030\004 \001(\001\022\021\n\tthreshold\030\005 \001(\001b\006pr"
-  "oto3"
+  "\t \001(\003\"B\n\010CartItem\022\n\n\002id\030\001 \001(\005\022\014\n\004user\030\002 "
+  "\001(\005\022\r\n\005goods\030\003 \001(\005\022\r\n\005count\030\004 \001(\005\")\n\004Car"
+  "t\022!\n\004item\030\001 \003(\0132\023.protoData.CartItem\"Z\n\010"
+  "Discount\022\n\n\002id\030\001 \001(\005\022\014\n\004type\030\002 \001(\005\022\017\n\007op"
+  "erand\030\003 \001(\005\022\020\n\010discount\030\004 \001(\001\022\021\n\tthresho"
+  "ld\030\005 \001(\001\"6\n\rDiscountArray\022%\n\010discount\030\001 "
+  "\003(\0132\023.protoData.Discountb\006proto3"
   ;
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_protoData_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_protoData_2eproto = {
-  false, false, 764, descriptor_table_protodef_protoData_2eproto, "protoData.proto", 
-  &descriptor_table_protoData_2eproto_once, nullptr, 0, 9,
+  false, false, 832, descriptor_table_protodef_protoData_2eproto, "protoData.proto", 
+  &descriptor_table_protoData_2eproto_once, nullptr, 0, 10,
   schemas, file_default_instances, TableStruct_protoData_2eproto::offsets,
   file_level_metadata_protoData_2eproto, file_level_enum_descriptors_protoData_2eproto, file_level_service_descriptors_protoData_2eproto,
 };
@@ -2096,17 +2119,17 @@ CartItem::CartItem(::PROTOBUF_NAMESPACE_ID::Arena* arena,
 CartItem::CartItem(const CartItem& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  ::memcpy(&user_, &from.user_,
+  ::memcpy(&id_, &from.id_,
     static_cast<size_t>(reinterpret_cast<char*>(&count_) -
-    reinterpret_cast<char*>(&user_)) + sizeof(count_));
+    reinterpret_cast<char*>(&id_)) + sizeof(count_));
   // @@protoc_insertion_point(copy_constructor:protoData.CartItem)
 }
 
 inline void CartItem::SharedCtor() {
 ::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
-    reinterpret_cast<char*>(&user_) - reinterpret_cast<char*>(this)),
+    reinterpret_cast<char*>(&id_) - reinterpret_cast<char*>(this)),
     0, static_cast<size_t>(reinterpret_cast<char*>(&count_) -
-    reinterpret_cast<char*>(&user_)) + sizeof(count_));
+    reinterpret_cast<char*>(&id_)) + sizeof(count_));
 }
 
 CartItem::~CartItem() {
@@ -2136,9 +2159,9 @@ void CartItem::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  ::memset(&user_, 0, static_cast<size_t>(
+  ::memset(&id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&count_) -
-      reinterpret_cast<char*>(&user_)) + sizeof(count_));
+      reinterpret_cast<char*>(&id_)) + sizeof(count_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -2148,23 +2171,30 @@ const char* CartItem::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::i
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // int32 user = 1;
+      // int32 id = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // int32 user = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           user_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // int32 goods = 2;
-      case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+      // int32 goods = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
           goods_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // int32 count = 3;
-      case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+      // int32 count = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
           count_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
@@ -2198,22 +2228,28 @@ failure:
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // int32 user = 1;
+  // int32 id = 1;
+  if (this->_internal_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_id(), target);
+  }
+
+  // int32 user = 2;
   if (this->_internal_user() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_user(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_user(), target);
   }
 
-  // int32 goods = 2;
+  // int32 goods = 3;
   if (this->_internal_goods() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_goods(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_goods(), target);
   }
 
-  // int32 count = 3;
+  // int32 count = 4;
   if (this->_internal_count() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_count(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(4, this->_internal_count(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -2232,21 +2268,28 @@ size_t CartItem::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // int32 user = 1;
+  // int32 id = 1;
+  if (this->_internal_id() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_id());
+  }
+
+  // int32 user = 2;
   if (this->_internal_user() != 0) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
         this->_internal_user());
   }
 
-  // int32 goods = 2;
+  // int32 goods = 3;
   if (this->_internal_goods() != 0) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
         this->_internal_goods());
   }
 
-  // int32 count = 3;
+  // int32 count = 4;
   if (this->_internal_count() != 0) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
@@ -2281,6 +2324,9 @@ void CartItem::MergeFrom(const CartItem& from) {
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
+  if (from._internal_id() != 0) {
+    _internal_set_id(from._internal_id());
+  }
   if (from._internal_user() != 0) {
     _internal_set_user(from._internal_user());
   }
@@ -2310,9 +2356,9 @@ void CartItem::InternalSwap(CartItem* other) {
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
       PROTOBUF_FIELD_OFFSET(CartItem, count_)
       + sizeof(CartItem::count_)
-      - PROTOBUF_FIELD_OFFSET(CartItem, user_)>(
-          reinterpret_cast<char*>(&user_),
-          reinterpret_cast<char*>(&other->user_));
+      - PROTOBUF_FIELD_OFFSET(CartItem, id_)>(
+          reinterpret_cast<char*>(&id_),
+          reinterpret_cast<char*>(&other->id_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata CartItem::GetMetadata() const {
@@ -2602,10 +2648,10 @@ const char* Discount::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::i
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // double disocunt = 4;
+      // double discount = 4;
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 33)) {
-          disocunt_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          discount_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
           ptr += sizeof(double);
         } else goto handle_unusual;
         continue;
@@ -2663,10 +2709,10 @@ failure:
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_operand(), target);
   }
 
-  // double disocunt = 4;
-  if (!(this->_internal_disocunt() <= 0 && this->_internal_disocunt() >= 0)) {
+  // double discount = 4;
+  if (!(this->_internal_discount() <= 0 && this->_internal_discount() >= 0)) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteDoubleToArray(4, this->_internal_disocunt(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteDoubleToArray(4, this->_internal_discount(), target);
   }
 
   // double threshold = 5;
@@ -2705,8 +2751,8 @@ size_t Discount::ByteSizeLong() const {
         this->_internal_type());
   }
 
-  // double disocunt = 4;
-  if (!(this->_internal_disocunt() <= 0 && this->_internal_disocunt() >= 0)) {
+  // double discount = 4;
+  if (!(this->_internal_discount() <= 0 && this->_internal_discount() >= 0)) {
     total_size += 1 + 8;
   }
 
@@ -2756,8 +2802,8 @@ void Discount::MergeFrom(const Discount& from) {
   if (from._internal_type() != 0) {
     _internal_set_type(from._internal_type());
   }
-  if (!(from._internal_disocunt() <= 0 && from._internal_disocunt() >= 0)) {
-    _internal_set_disocunt(from._internal_disocunt());
+  if (!(from._internal_discount() <= 0 && from._internal_discount() >= 0)) {
+    _internal_set_discount(from._internal_discount());
   }
   if (!(from._internal_threshold() <= 0 && from._internal_threshold() >= 0)) {
     _internal_set_threshold(from._internal_threshold());
@@ -2796,6 +2842,196 @@ void Discount::InternalSwap(Discount* other) {
       file_level_metadata_protoData_2eproto[8]);
 }
 
+// ===================================================================
+
+class DiscountArray::_Internal {
+ public:
+};
+
+DiscountArray::DiscountArray(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned),
+  discount_(arena) {
+  SharedCtor();
+  if (!is_message_owned) {
+    RegisterArenaDtor(arena);
+  }
+  // @@protoc_insertion_point(arena_constructor:protoData.DiscountArray)
+}
+DiscountArray::DiscountArray(const DiscountArray& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      discount_(from.discount_) {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:protoData.DiscountArray)
+}
+
+inline void DiscountArray::SharedCtor() {
+}
+
+DiscountArray::~DiscountArray() {
+  // @@protoc_insertion_point(destructor:protoData.DiscountArray)
+  if (GetArenaForAllocation() != nullptr) return;
+  SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+inline void DiscountArray::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void DiscountArray::ArenaDtor(void* object) {
+  DiscountArray* _this = reinterpret_cast< DiscountArray* >(object);
+  (void)_this;
+}
+void DiscountArray::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
+void DiscountArray::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+
+void DiscountArray::Clear() {
+// @@protoc_insertion_point(message_clear_start:protoData.DiscountArray)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  discount_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* DiscountArray::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // repeated .protoData.Discount discount = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_discount(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
+        } else goto handle_unusual;
+        continue;
+      default: {
+      handle_unusual:
+        if ((tag == 0) || ((tag & 7) == 4)) {
+          CHK_(ptr);
+          ctx->SetLastTag(tag);
+          goto success;
+        }
+        ptr = UnknownFieldParse(tag,
+            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+            ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
+      }
+    }  // switch
+  }  // while
+success:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto success;
+#undef CHK_
+}
+
+::PROTOBUF_NAMESPACE_ID::uint8* DiscountArray::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:protoData.DiscountArray)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // repeated .protoData.Discount discount = 1;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->_internal_discount_size()); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, this->_internal_discount(i), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:protoData.DiscountArray)
+  return target;
+}
+
+size_t DiscountArray::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:protoData.DiscountArray)
+  size_t total_size = 0;
+
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // repeated .protoData.Discount discount = 1;
+  total_size += 1UL * this->_internal_discount_size();
+  for (const auto& msg : this->discount_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData DiscountArray::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSizeCheck,
+    DiscountArray::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*DiscountArray::GetClassData() const { return &_class_data_; }
+
+void DiscountArray::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message*to,
+                      const ::PROTOBUF_NAMESPACE_ID::Message&from) {
+  static_cast<DiscountArray *>(to)->MergeFrom(
+      static_cast<const DiscountArray &>(from));
+}
+
+
+void DiscountArray::MergeFrom(const DiscountArray& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:protoData.DiscountArray)
+  GOOGLE_DCHECK_NE(&from, this);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  discount_.MergeFrom(from.discount_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void DiscountArray::CopyFrom(const DiscountArray& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:protoData.DiscountArray)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool DiscountArray::IsInitialized() const {
+  return true;
+}
+
+void DiscountArray::InternalSwap(DiscountArray* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  discount_.InternalSwap(&other->discount_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata DiscountArray::GetMetadata() const {
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_protoData_2eproto_getter, &descriptor_table_protoData_2eproto_once,
+      file_level_metadata_protoData_2eproto[9]);
+}
+
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace protoData
 PROTOBUF_NAMESPACE_OPEN
@@ -2825,6 +3061,9 @@ template<> PROTOBUF_NOINLINE ::protoData::Cart* Arena::CreateMaybeMessage< ::pro
 }
 template<> PROTOBUF_NOINLINE ::protoData::Discount* Arena::CreateMaybeMessage< ::protoData::Discount >(Arena* arena) {
   return Arena::CreateMessageInternal< ::protoData::Discount >(arena);
+}
+template<> PROTOBUF_NOINLINE ::protoData::DiscountArray* Arena::CreateMaybeMessage< ::protoData::DiscountArray >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::protoData::DiscountArray >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

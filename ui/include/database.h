@@ -7,8 +7,9 @@
 #include<cstdlib>
 #include<memory>
 #include<vector>
-// #include<for
 #include"sqlite3.h"
+#include"protoData.pb.h"
+
 class Database{
     public:
         static sqlite3* get_db(){
