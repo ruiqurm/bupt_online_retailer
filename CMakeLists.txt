@@ -21,15 +21,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #     ${PROJECT_SOURCE_DIR}/external/
 # )
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include
+  ${PROJECT_SOURCE_DIR}/common
 )
 
-
-add_subdirectory(src)
+add_subdirectory(common)
+add_subdirectory(server)
+add_subdirectory(client)
 # add_subdirectory(ui)
 
-enable_testing()
-add_subdirectory(test)
+# enable_testing()
+# add_subdirectory(test)
 
 
 
@@ -39,11 +40,11 @@ add_custom_target (generate
     COMMAND ${CMAKE_COMMAND} -E  # 创建dist文件夹
         make_directory ${dist_gen_name}
     COMMAND ${CMAKE_COMMAND} -E  # 复制头文件
-        copy_directory ${PROJECT_SOURCE_DIR}/include ${dist_gen_name}/include
+        copy_directory ${PROJECT_SOURCE_DIR}/client/include ${dist_gen_name}/include
     COMMAND ${CMAKE_COMMAND} -E  # 创建libs文件夹
         make_directory ${dist_gen_name}/libs
     COMMAND ${CMAKE_COMMAND} -E 
-        copy ${CMAKE_BINARY_DIR}/src/libbupt_online_ratailer_static.a ${dist_gen_name}/libs/
+        copy ${CMAKE_BINARY_DIR}/client/src/libbupt_online_ratailer_static.a ${dist_gen_name}/libs/
     COMMAND echo 在${CMAKE_BINARY_DIR}/dist/下生成
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 

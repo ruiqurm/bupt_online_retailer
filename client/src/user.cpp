@@ -1,5 +1,6 @@
 #include "user.h"
-
+#include "protoData.pb.h"
+#include"protocol.h"
 const std::regex User::USERNAME_PATTERN = std::regex("^[\\w,-_,!@#$%^&*()]{4,16}$");
 const std::regex User::PASSWORD_PATTERN = std::regex("^[\\w,-_,!@#$%^&*()]{4,16}$");
 
@@ -8,10 +9,7 @@ const std::regex User::PASSWORD_PATTERN = std::regex("^[\\w,-_,!@#$%^&*()]{4,16}
 * 
 */
 bool User::register_(int type,const string& username,const string& password){
-    auto& record = UserRecord::get_record();
-    if (record.get(username)){
-        return false;
-    }
+    
     char*c= const_cast<char*>(username.c_str());
     int i=0;
     for(auto &c:username){
@@ -31,47 +29,9 @@ bool User::register_(int type,const string& username,const string& password){
     if(!validate_password_format(password)){
         throw "password syntax error";
     }
+    auto& record = UserRecord::get_record();
     record.set(type,username,password);
     return true;
-}
-int UserRecord::load(){
-    int count=0,i=0;
-    std::ifstream f(USER_FILE_NAME);
-    if (!name_to_data.empty())name_to_data.clear();
-    if (!pk_to_name.empty())pk_to_name.clear();
-    UserData tmpdata;
-    max_pk=0;
-    while(f>>tmpdata.id){
-        if(tmpdata.id!=0){
-            f>>tmpdata.username>>tmpdata.password>>tmpdata.balance>>tmpdata.type;
-            name_to_data.emplace(tmpdata.username,tmpdata);
-            pk_to_name.emplace(tmpdata.id,tmpdata.username);
-            max_pk = std::max(max_pk,tmpdata.id);
-            count++;
-        }
-        f.seekg(i+MAX_LINE);
-        i+=MAX_LINE;
-    }
-    return count;
-}
-void UserRecord::set(int type,const string& username,const string& password){
-    max_pk++;
-    UserData data(max_pk,username.c_str(),password.c_str(),0,type);
-    name_to_data.emplace(username,data);
-    pk_to_name.emplace(max_pk,username);
-    insert_data(data);
-}
-bool UserRecord::update(const UserData&data){
-    auto it = name_to_data.find(data.username);
-    if(it!=name_to_data.end()){
-        if(data.id!=it->second.id)return false;//尝试修改id
-        memcpy(&(it->second),&data,sizeof(UserData));
-        set_write_cursor_to_nth_line(data.id);
-        insert_data(data);
-        write_LF_nth_line(data.id);
-        return true;
-    }
-    return false;
 }
 unsigned short UserRecord::register_type(unsigned short id, p_user_construct factoryMethod){
     #if DEBUG==1
@@ -81,27 +41,28 @@ unsigned short UserRecord::register_type(unsigned short id, p_user_construct fac
     return id;
 }
 
-void UserRecord::clear(){
-    name_to_data.clear();
-    pk_to_name.clear();
-    max_pk = 0;
-    database.close();
-    database.open(USER_FILE_NAME,std::ios::out);
-    database.close();
-    database.open(USER_FILE_NAME,std::ios::in|std::ios::out);
-}
+// void UserRecord::clear(){
+//     name_to_data.clear();
+//     pk_to_name.clear();
+//     max_pk = 0;
+//     database.close();
+//     database.open(USER_FILE_NAME,std::ios::out);
+//     database.close();
+//     database.open(USER_FILE_NAME,std::ios::in|std::ios::out);
+// }
 bool UserData::save(){
     auto &record = UserRecord::get_record();
     return record.update(*this);
 }
 std::shared_ptr<User> User::login(const string& username,const string& password){
     auto& record = UserRecord::get_record();
-    UserData* data = record.get(username);
+    UserData* data = record.login(username,password);
     if(!data){
         throw "no exist";
     }
-    if(data->password!=password){
-        throw "password error";
+    if(data->id<0){
+        delete data;
+        throw "password error";        
     }
     return record.create_user(data);
 }
@@ -114,3 +75,113 @@ bool User::save(){
     return record.update(*data);
 }
  
+
+/*
+*
+* UserRecord
+*
+*/
+
+// void UserRecord::remove(int id){
+//     ProtocolWriter writer(send_buf,Protocol::USER)
+//     auto it = pk_to_name.find(id);
+//     if(it==pk_to_name.end())return;
+//     name_to_data.erase(it->second);
+//     pk_to_name.erase(id);
+//     remove_data(id);
+// }
+// void UserRecord::remove(const std::string& username){
+//     auto it = name_to_data.find(username);
+//     if(it==name_to_data.end())return;
+//     int id = it->second.id;
+//     pk_to_name.erase(it->second.id);
+//     name_to_data.erase(it);
+//     remove_data(id);
+// }
+// UserData* UserRecord::get(const string&username){
+//     ProtocolWriter writer(send_buf,Protocol::USER_INFO,base->token());
+//     protoData::User u;
+//     u.username()
+//     writer.load(u);
+//     ProtocolReader reader(recv_buf);
+//     if(base->send(writer,reader)){
+//        reader.get(u);
+//        return u.username();
+//     }else{
+//         return string();
+//     }
+// }
+void UserRecord::logout(){
+    ProtocolWriter writer(send_buf,Protocol::USER_LOGOUT,base->token());
+    ProtocolReader reader(recv_buf);
+    base->send(writer,reader);
+}
+
+UserData* UserRecord::login(const string&username,const string&password){
+    ProtocolWriter writer(send_buf,Protocol::USER_LOGIN,base->token());
+    protoData::UserForm form;
+    form.set_username(username);
+    form.set_password(password);
+    writer.load(form);
+    ProtocolReader reader(recv_buf);
+    if(base->send(writer,reader)){
+        protoData::User user;
+        reader.get(user);
+        base->copy_to_token(reader.token());
+        return new UserData(user.id(),user.username(),user.password(),user.balance(),(int)user.type());
+    }else{
+        return nullptr;
+    }
+}
+
+
+UserData* UserRecord::get(int id){
+    ProtocolWriter writer(send_buf,Protocol::USER_INFO,base->token());
+    protoData::User u;
+    u.set_id(id);
+    writer.load(u);
+    ProtocolReader reader(recv_buf);
+    if(base->send(writer,reader)){
+        if(reader.length()>0){
+            reader.get(u);
+            return new UserData(u.id(),u.username(),u.password(),u.balance(),u.type());
+        }
+    }
+    return nullptr;
+}
+string UserRecord::get_username(int id){
+    ProtocolWriter writer(send_buf,Protocol::USER_INFO,base->token());
+    protoData::User u;
+    u.set_id(id);
+    writer.load(u);
+    ProtocolReader reader(recv_buf);
+    if(base->send(writer,reader)){
+       if(reader.length()>0){
+        reader.get(u);
+        return u.username();
+       }
+    }
+    return string();
+}
+
+void UserRecord::set(int type,const string& username,const string& password){
+    ProtocolWriter writer(send_buf,Protocol::USER_REGISTER,nullptr);
+    protoData::UserForm u;
+    u.set_username(username);
+    u.set_password(password);
+    u.set_type(type);
+    writer.load(u);
+    ProtocolReader reader(recv_buf);
+    base->send(writer,reader);
+}
+bool UserRecord::update(const UserData&data){
+    ProtocolWriter writer(send_buf,Protocol::USER_UPDATE,base->token());
+    protoData::User u;
+    u.set_username(data.username);
+    u.set_password(data.password);
+    u.set_type(data.type);
+    writer.load(u);
+    ProtocolReader reader(recv_buf);
+    base->send(writer,reader);
+    return true;
+}

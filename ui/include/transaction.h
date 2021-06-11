@@ -92,12 +92,14 @@ class TransactionRecord{
         void set_finished(int id);
         
     protected:
-        TransactionRecord();
-        static int fetch_to_object(void*_data, int argc, char **argv, char **azColName);
-        static int fetch_to_vector(void*_data, int argc, char **argv, char **azColName);
-
+        TransactionRecord():base(Database::get_database()){}
+        // static int fetch_to_object(void*_data, int argc, char **argv, char **azColName);
+        // static int fetch_to_vector(void*_data, int argc, char **argv, char **azColName);
+    
     private:
-        sqlite3 *db;
+        Database* base;
+        char send_buf[8192];
+        char recv_buf[8192];
 };
 class CartRecord{
     public:
@@ -106,15 +108,16 @@ class CartRecord{
             return record;
         }
         std::map<int,int> get(int user_id);
-        // void set(const std::map<int,int>&m);
         int set(int user_id,int goods_id,int num);
         void remove(int user_id,int goods_id);
-
+        
     protected:
-        CartRecord();
-        static int fetch_to_map(void*_data, int argc, char **argv, char **azColName);
+        CartRecord():base(Database::get_database()){}
+        // static int fetch_to_map(void*_data, int argc, char **argv, char **azColName);
     private:
-        sqlite3 *db;
+        Database* base;
+        char send_buf[8192];
+        char recv_buf[8192];
 };
 class Cart{
     //购物车
@@ -126,7 +129,7 @@ class Cart{
 
         //添加
         bool add(int goods_id,int delta,int max_count);
-        
+        void clear();
         //添加
         void add(int goods_id,int delta);
         void reduce(int goods_id,int delta);

@@ -119,13 +119,23 @@ protoData::User* UserRecordWriter::get_user_by_token(const char*token){
     log_error("无此用户,token=%.16s",tmp);
     return nullptr;
 }
-protoData::User*  UserRecordWriter::get_user_by_username(const string&username){
+protoData::User*  UserRecordWriter::get_user(const string&username){
     auto it =  name_to_data.find(username);
     if(it!=name_to_data.end()){
         return &it->second;
     }else{
         return nullptr;
     }
+}
+protoData::User*  UserRecordWriter::get_user(int id){
+    auto it = id_to_name.find(id);
+    if(it!=id_to_name.end()){
+        auto iit =  name_to_data.find(it->second);
+        if(iit!=name_to_data.end()){
+            return &iit->second;
+        }
+    }
+    return nullptr;
 }
 bool UserRecordWriter::check_password(protoData::User* user,const string& password){
     return user->password() == password;

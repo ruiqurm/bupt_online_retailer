@@ -42,8 +42,9 @@ void loginDialog::on_pushButton_clicked()
     try{
         user = User::login(ui->lineEdit->text().toStdString(),
                     ui->lineEdit_2->text().toStdString());
-    }catch(const char *){
-        msgBox->setText("登录失败");
+    }catch(const char *s){
+        qDebug("%s",s);
+        msgBox->setText("登录失败,");
         msgBox->exec();
         //登录失败不会关闭
         return;

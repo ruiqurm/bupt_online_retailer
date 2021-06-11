@@ -23,7 +23,7 @@ int init(){
     int size;
     
    
-    portno = atoi("8888");
+    portno = 8888;
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
         log_error("ERROR opening socket");

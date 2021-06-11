@@ -113,7 +113,7 @@ class GoodsGetBySellerExecutor:public Executor{
 };
 class GoodsGetAllExecutor:public Executor{
     public:
-        GoodsGetAllExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1){}
+        GoodsGetAllExecutor(char*a,char*b,protoData::User*user1=nullptr):Executor(a,b,user1,PERMISSION_ANY){}
         void execImp()override;
 };
 class GoodsGetByNameExecutor:public Executor{

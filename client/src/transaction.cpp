@@ -6,85 +6,83 @@
  * 
  */
 
-TransactionRecord::TransactionRecord():db(Database::get_db()){
-    static const char sql[]= "CREATE TABLE _TRANSACTION("  \
-                                "ID INTEGER PRIMARY KEY AUTOINCREMENT," \
-                                "_FROM           INT       NOT NULL," \
-                                "_FROM_NAME      CHAR(64)    NOT NULL," \
-                                "_TO             INT         NOT NULL," \
-                                "_TO_NAME      CHAR(64)    NOT NULL," \
-                                "FINISHED       INT         NOT NULL," \
-                                "VOLUME         FLOAT         NOT NULL," \
-                                "DETAIL         TEXT        NOT NULL," \
-                                "TIMESTAMP      INT         NOT NULL);" ;
-    Database::exec(db,sql,nullptr,nullptr);
-}
-std::shared_ptr<Transaction> TransactionRecord::get(int id){
-    static const char sql[] = "SELECT * FROM _TRANSACTION WHERE ID=%d";
-    static char buffer[64]; 
-    Transaction*d;
 
-    sprintf(buffer,sql,id);
-    Database::exec(db,buffer,fetch_to_object,&d);
-    return std::shared_ptr<Transaction>(d);
+std::shared_ptr<Transaction> TransactionRecord::get(int id){
+    ProtocolWriter writer(send_buf,Protocol::TRANSACTION_GET,base->token());
+    protoData::Transaction tran;
+    tran.set_id(id);
+    writer.load(tran);
+    ProtocolReader reader(recv_buf);
+    if(base->send(writer,reader)){
+       reader.get(tran);
+       return std::make_shared<Transaction>(tran.id(),tran.from(),tran.from_name(),tran.to(),tran.to_name(),tran.finished(),
+       tran.volume(),tran.detail(),tran.timestamp());
+    }else{
+        return nullptr;
+    }
 }
 int TransactionRecord::set(Transaction&data){
-    static char buffer[1024];
-    static const char sql[] = "INSERT INTO _TRANSACTION (_FROM,_FROM_NAME,_TO,_TO_NAME,FINISHED,VOLUME,DETAIL,TIMESTAMP)"\
-                              "VALUES(%d,'%s',%d,'%s',%d,%f,'%s',%ld); ";
-    sprintf(buffer,sql,data.from_id(),data.c_from_name(),data.to_id(),data.c_to_name(),((data.is_finished())?1:0),
-    data.volume(),data.raw_detail().c_str(),data.timestamp());
-    Database::exec(db,buffer,nullptr,nullptr);
-    return sqlite3_last_insert_rowid(db);
+    ProtocolWriter writer(send_buf,Protocol::TRANSACTION_SET,base->token());
+    protoData::Transaction tran;
+    tran.set_id(data.id());
+    tran.set_from(data.from_id());
+    tran.set_from_name(data.from_name());
+    tran.set_to(data.to_id());
+    tran.set_to_name(data.to_name());
+    tran.set_finished(data.is_finished());
+    tran.set_volume(data.volume());
+    tran.set_detail(data.raw_detail());
+    tran.set_timestamp(data.timestamp());
+    writer.load(tran);
+    ProtocolReader reader(recv_buf);
+    if(base->send(writer,reader)){
+       reader.get(tran);
+       return tran.id();
+    }else{
+        return -1;
+    }
 }
-int TransactionRecord::fetch_to_object(void*_data, int argc, char **argv, char **azColName){
-    if(argc!=9){(*((Transaction**)_data))=nullptr;return -1;}
-    Transaction* &data = (*(Transaction**)_data);
-    data = new Transaction( atoi(argv[0]),
-                            atoi(argv[1]),
-                            argv[2],
-                            atoi(argv[3]),
-                            argv[4],
-                            atoi(argv[5]),
-                            atof(argv[6]),
-                            argv[7],
-                            atoll(argv[8]));
-    // std::cout<<data->from_id()<<std::endl;
-    return 0;
-}
-int TransactionRecord::fetch_to_vector(void*_data, int argc, char **argv, char **azColName){
-    if(argc!=9){ *( (std::unique_ptr<std::vector<std::shared_ptr<Transaction>>>*)_data)=nullptr;return -1;}
-    std::unique_ptr<std::vector<std::shared_ptr<Transaction>>>&data = *( (std::unique_ptr<std::vector<std::shared_ptr<Transaction>>>*)_data);
-    data->push_back(std::make_shared<Transaction>(  atoi(argv[0]),
-                                                    atoi(argv[1]),
-                                                    argv[2],
-                                                    atoi(argv[3]),
-                                                    argv[4],
-                                                    atoi(argv[5]),
-                                                    atof(argv[6]),
-                                                    argv[7],
-                                                    atoll(argv[8])));
-    return 0;
-}
-void TransactionRecord::cancel(int id){
-    static const char sql[] = "DELETE FROM _TRANSACTION WHERE ID=%d AND FINISHED=0;";
-    static char buffer[64];
-    sprintf(buffer,sql,id);
-    Database::exec(db,buffer,nullptr,nullptr);
+void TransactionRecord::cancel(int id){   
+    ProtocolWriter writer(send_buf,Protocol::TRANSACTION_CANCEL,base->token());
+    protoData::Transaction tran;
+    tran.set_finished(false);
+    tran.set_id(id);
+    writer.load(tran);
+    ProtocolReader reader(recv_buf);
+    base->send(writer,reader);
 }
 void TransactionRecord::set_finished(int id){
-    static const char sql[] = "UPDATE _TRANSACTION SET FINISHED=1 WHERE ID=%d";
-    static char buffer[64];
-    sprintf(buffer,sql,id);
-    Database::exec(db,buffer,nullptr,nullptr);
+    ProtocolWriter writer(send_buf,Protocol::TRANSACTION_SET_FINISHED,base->token());
+    protoData::Transaction tran;
+    tran.set_finished(true);
+    tran.set_id(id);
+    writer.load(tran);
+    ProtocolReader reader(recv_buf);
+    base->send(writer,reader);
 }
 TransactionRecord::pTransVec TransactionRecord::get_transaction(int user_id,bool is_finished){
-    static char buffer[96];
-    static const char sql[] = "SELECT * FROM _TRANSACTION WHERE FINISHED = %d AND (_FROM = %d OR _TO = %d);";
-    auto pvec = std::make_unique<std::vector<std::shared_ptr<Transaction>>>();
-    sprintf(buffer,sql,is_finished?1:0,user_id,user_id);
-    Database::exec(db,buffer,fetch_to_vector,&pvec);
-    return pvec;
+    ProtocolWriter writer(send_buf,Protocol::TRANSACTION_GET_BY_USER,base->token());
+    protoData::Transaction tran;
+    tran.set_finished(is_finished);
+    tran.set_from(user_id);
+    writer.load(tran);
+    ProtocolReader reader(recv_buf);
+    pTransVec vec = std::make_unique<std::vector<std::shared_ptr<Transaction>>>();
+    if(base->send(writer,reader)){
+        protoData::TransactionArray array;
+        reader.get(array);
+        int n =array.transaction_size();
+        
+        for(int i =0;i<n;i++){
+            vec->push_back(
+               std::make_shared<Transaction>(array.transaction(i).id(),array.transaction(i).from(),array.transaction(i).from_name(),array.transaction(i).to(),
+               array.transaction(i).to_name(),array.transaction(i).finished(),
+               array.transaction(i).volume(),array.transaction(i).detail(),array.transaction(i).timestamp())
+            );
+        }
+        
+    }
+    return vec;
 }
 
 /**
@@ -168,21 +166,22 @@ bool Transaction::set_finished(){
  * @brief CartRecord implemention
  * 
  */
-CartRecord::CartRecord():db(Database::get_db()){
-    static const char sql[]= "CREATE TABLE CART("\
-                            "ID INTEGER PRIMARY KEY AUTOINCREMENT,"\
-                            "USER           INT       NOT NULL,"\
-                            "GOODS          INT       NOT NULL,"\
-                            "COUNT          INT       NOT NULL,"\
-                            "UNIQUE(USER,GOODS) ON CONFLICT REPLACE);";
-    Database::exec(db,sql,nullptr,nullptr);
-}
 std::map<int,int> CartRecord::get(int user_id){
-    static const char sql[] = "SELECT GOODS,COUNT FROM CART WHERE USER=%d";
-    static char buffer[64];
+    ProtocolWriter writer(send_buf,Protocol::CART_GET,base->token());
+    protoData::CartItem item;
+    item.set_user(user_id);
+    writer.load(item);
+    ProtocolReader reader(recv_buf);
     std::map<int,int> m;
-    sprintf(buffer,sql,user_id);
-    Database::exec(db,buffer,fetch_to_map,&m);
+    if(base->send(writer,reader)){
+        protoData::Cart cart;
+        reader.get(cart);
+        int n = cart.item_size();
+        for(int i=0;i<n;i++){
+            m[cart.item(i).goods()] = cart.item(i).count();
+        }
+        
+    }
     return m;
 }
 
@@ -190,30 +189,31 @@ std::map<int,int> CartRecord::get(int user_id){
 
 // }
 int CartRecord::set(int user_id,int goods_id,int num){
-    static char buffer[128];
-    static const char sql[] = "INSERT INTO CART (USER,GOODS,COUNT)"\
-                              "VALUES(%d,%d,%d); ";
-    sprintf(buffer,sql,user_id,goods_id,num);
-    Database::exec(db,buffer,nullptr,nullptr);
-    return sqlite3_last_insert_rowid(db);
+    ProtocolWriter writer(send_buf,Protocol::CART_SET,base->token());
+    protoData::CartItem item;
+    item.set_user(user_id);
+    item.set_goods(goods_id);
+    item.set_count(num);
+    writer.load(item);
+    ProtocolReader reader(recv_buf);
+    if(base->send(writer,reader)){
+        reader.get(item);
+        return item.id();
+    }else{
+        return -1;
+    }
 }
 void CartRecord::remove(int user_id,int goods_id){
-    static char buffer[128];
-    static const char sql[] = "DELETE FROM CART WHERE USER=%d AND GOODS=%d;";
-    sprintf(buffer,sql,user_id,goods_id);
-    Database::exec(db,buffer,nullptr,nullptr);
+    ProtocolWriter writer(send_buf,Protocol::CART_SET,base->token());
+    protoData::CartItem item;
+    item.set_user(user_id);
+    item.set_goods(goods_id);
+    writer.load(item);
+    ProtocolReader reader(recv_buf);
+    base->send(writer,reader);
 }
 
-int CartRecord::fetch_to_map(void*_data, int argc, char **argv, char **azColName){
-    if(argc!=2){return -1;}
-    std::map<int,int>& data = *static_cast<std::map<int,int>*>(_data);
-    data[atoi(argv[0])] += atoi(argv[1]);//map默认值为0,虽然不允许重复，但是这样写也没错
-    //argv[0]是id
-    //argv[1]是用户
-    //argv[2]是商品
-    //argv[3]是数量
-    return 0;
-}
+
 /**
  * @brief Cart implemention
  * 

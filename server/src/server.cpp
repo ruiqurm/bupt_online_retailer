@@ -70,7 +70,7 @@ void UserLoginExecutor::execImp(){
     if(token.size()>0){
         //成功
         memcpy(((Protocol*)write_buf)->token,token.c_str(),16);
-        user = record.get_user_by_username(form.username());
+        user = record.get_user(form.username());
         set_length(user->ByteSizeLong());
         user->SerializeToArray(write_data,user->ByteSizeLong());
         log_debug("token=%.16s",token.c_str());
@@ -104,7 +104,7 @@ void UserUpdateExecutor::execImp(){
     if(user->type()!=update_data.type() || user->password()!=update_data.password()){
         set_status(Protocol::OK_LOGOUT);
         record.logout(user);
-        user = record.get_user_by_username(update_data.username());
+        user = record.get_user(update_data.username());
         memset(((Protocol*)write_buf)->token,0,16);
     }
     user->SerializeToArray(write_data,user->ByteSizeLong());
@@ -129,8 +129,23 @@ void UserAuthenticatePasswordExecutor::execImp(){
     }
 }
 void UserInfoExecutor::execImp(){
-    set_length(user->ByteSizeLong());
-    user->SerializeToArray(write_data,user->ByteSizeLong());
+    if(((Protocol*)read_buf)->length == 0){
+        set_length(user->ByteSizeLong());
+        user->SerializeToArray(write_data,user->ByteSizeLong());
+        return;
+    }
+    auto& record = UserRecordWriter::get_record();
+    protoData::User userdata;
+    userdata.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    auto tmp = record.get_user(userdata.id());
+    if(tmp!=nullptr){
+        set_length(tmp->ByteSizeLong());
+        tmp->SerializeToArray(write_data,tmp->ByteSizeLong());
+    }else{
+        set_length(0);
+    }
+    
+    
 }
 
 
@@ -166,7 +181,7 @@ void GoodsGetByIDMultipleExecutor::execImp(){
     protoData::GoodsArray array;
     array.ParseFromArray(read_data,((Protocol*)read_buf)->length);
     log_debug("获取多个商品");
-    if(array.goods_size()>0){
+    if(array.goods_size()>=0){
         GoodsDatabase database;
         database.get(array);
         array.SerializeToArray(write_data,array.ByteSizeLong());
@@ -205,7 +220,7 @@ void GoodsGetByNameExecutor::execImp(){
     protoData::GoodsArray array;
     goods.ParseFromArray(read_data,((Protocol*)read_buf)->length);
     log_debug("获取名字和' %s '相近的商品",goods.name().c_str());
-    if(goods.name().size()>0){
+    if(goods.name().size()>=0){
         GoodsDatabase database;
         database.get_goods_by_name(goods.name(),array);
         array.SerializeToArray(write_data,array.ByteSizeLong());
@@ -306,6 +321,7 @@ void DiscountGetCategoryDiscountExecutor::execImp(){
     log_debug("获取关于商品类别%d的打折记录",discount.operand());
     DiscountDatabase database;
     database.get_category_discount(discount);
+    // discount
     discount.SerializeToArray(write_data,discount.ByteSizeLong());
     set_length(discount.ByteSizeLong());
 }

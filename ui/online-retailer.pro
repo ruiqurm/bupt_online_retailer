@@ -65,7 +65,9 @@ FORMS += \
     tranform.ui \
     usergoodsmanagement.ui
 LIBS += -L$$PWD/libs -lbupt_online_ratailer_static
-LIBS += -lpthread\
+
+LIBS += -lprotobuf\
+        -lpthread\
         -ldl
 
 # Default rules for deployment.

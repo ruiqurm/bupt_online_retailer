@@ -83,10 +83,7 @@ class GoodsTemplate: public Goods{
 
 
 
-template <>
-constexpr char MetaRecord<Goods,GoodsData>::TABLE_NAME[];
-
-class GoodsRecord: public MetaRecord<Goods,GoodsData>{
+class GoodsRecord{
     public:
     
         typedef std::unique_ptr<std::vector<std::shared_ptr<Goods>>> pGoodsVec;
@@ -98,8 +95,9 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
         GoodsRecord(const GoodsRecord&)=delete;//禁止拷贝构造
         
         std::shared_ptr<Goods> get(int id);
+        int set(GoodsData&data);
         bool update(const GoodsData&);
-        // bool update(map<string,>)
+
         pGoodsVec get_user_goods(int seller_id);
         pGoodsVec get_all_goods();
         // https://stackoverflow.com/questions/28888375/run-a-query-with-a-limit-offset-and-also-get-the-total-number-of-rows
@@ -107,47 +105,22 @@ class GoodsRecord: public MetaRecord<Goods,GoodsData>{
 
         pGoodsVec get_goods_by_name(const string& search_for_name);
         //按输入的字符串搜索.采用模糊搜索
-        void clear(){
-            static const char sql[] = "DELETE FROM %s";
-            static char buffer[128];
-            sprintf(buffer,sql,this->TABLE_NAME);
-            Database::exec(db,buffer,nullptr,nullptr);
-        }
         unsigned short static register_type(unsigned short id, p_goods_construct factoryMethod){
             GoodsRecord::register_types[id] =factoryMethod;
             return id;
         }
-        void remove(int id)override; 
+        
+        void remove(int id); 
         pGoodsVec get(const std::vector<int>&l);
     protected:
         // using _remove= MetaRecord<Goods,GoodsData>::remove;
-        GoodsRecord();
-
-        void insert_data_to_string(char buffer[],const GoodsData& data){
-            static const char sql[] =  "INSERT INTO %s (NAME,PRICE,SELLER,TYPE,REMAIN,DESCRIPTION) VALUES ('%s', %f, %d ,%d,%d,'%s'); ";
-            snprintf(buffer,512,sql,TABLE_NAME,data.name.c_str(),data.price,data.seller,data.type,data.remain,data.description.c_str());
-        }
-        static int fetch_in_struct(void*_data, int argc, char **argv, char **azColName){
-            GoodsData* data = (GoodsData*)_data;
-            data->id = atoi(argv[0]);
-            data->name.assign(argv[1]);
-            data->price = atof(argv[2]);
-            data->seller = atoi(argv[3]);
-            data->type = atoi(argv[4]);
-            data->remain = atoi(argv[5]);
-            data->description.assign(argv[6]);
-            return 0;
-        }
-        static int fetch_in_vector(void*_data, int argc, char **argv, char **azColName){
-            GoodsData data(atoi(argv[0]),argv[1],atof(argv[2]),atoi(argv[3]),atoi(argv[4]),atoi(argv[5]),argv[6]);
-            auto& vec = *(std::vector<std::shared_ptr<Goods>>*)_data;
-            vec.push_back(register_types[data.type](data));
-            return 0;
-        }
-        
-
+        GoodsRecord():base(Database::get_database()),manager(UserRecord::get_record()){}
     
     private:
+        Database* base;
+        char send_buf[8192];
+        char recv_buf[8192];
+
         const UserRecord& manager;
         static p_goods_construct register_types[256];
 };
@@ -269,9 +242,11 @@ class DiscountRecord{
         void remove_by_goods(int goods_id);
         void remove(int id);
     protected:
-        DiscountRecord();
-        static int fetch_to_object(void*_data, int argc, char **argv, char **azColName);
-        static int fetch_to_vector(void*_data, int argc, char **argv, char **azColName);
-    private:
-        sqlite3 *db;
+        DiscountRecord():base(Database::get_database()){}
+        Database* base;
+        char send_buf[8192];
+        char recv_buf[8192];
+
+        // static int fetch_to_object(void*_data, int argc, char **argv, char **azColName);
+        // static int fetch_to_vector(void*_data, int argc, char **argv, char **azColName);
 };

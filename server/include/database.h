@@ -30,7 +30,8 @@ class UserRecordWriter{
         void update(protoData::User&);
 
         protoData::User* get_user_by_token(const char* token);
-        protoData::User* get_user_by_username(const string&username);
+        protoData::User* get_user(const string&username);
+        protoData::User* get_user(int id);
         
         
     private:

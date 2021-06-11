@@ -5,11 +5,6 @@
  * Goods
  * 
  */
-template <>
-constexpr char MetaRecord<Goods,GoodsData>::TABLE_NAME[] = "GOODS";
-// template <>
-// constexpr char MetaRecord<Transaction,TransactionData>::TABLE_NAME[] ="MYTRANSACTION";
-
 bool Goods::save(){
     auto &record = GoodsRecord::get_record();
     return record.update(data);
@@ -66,85 +61,157 @@ double Goods::get_price(const GoodsContext& context){
  * GoodsRecord
  */
 GoodsRecord::p_goods_construct GoodsRecord::register_types[256] {nullptr};
-GoodsRecord::GoodsRecord():manager(UserRecord::get_record()){
-    static const char sql[]= "CREATE TABLE GOODS("  \
-                                "ID INTEGER PRIMARY KEY AUTOINCREMENT," \
-                                "NAME           CHAR(64)    NOT NULL," \
-                                "PRICE          FLOAT       NOT NULL," \
-                                "SELLER         INT         NOT NULL," \
-                                "TYPE           INT         NOT NULL," \
-                                "REMAIN         INT         NOT NULL," \
-                                "DESCRIPTION    TEXT        NOT NULL);";
-    Database::exec(db,sql,nullptr,nullptr);
-}
-std::shared_ptr<Goods> GoodsRecord::get(int id){
-    static const char sql[] = "SELECT * FROM %s WHERE ID=%d";
-    static char buffer[48]; 
-    GoodsData goods;
 
-    snprintf(buffer,48,sql,TABLE_NAME,id);
-    Database::exec(db,buffer,fetch_in_struct,&goods);
-    return register_types[goods.type](goods);
+std::shared_ptr<Goods> GoodsRecord::get(int id){
+    ProtocolWriter writer(send_buf,Protocol::GOOOS_GET_BY_ID,base->token());
+    protoData::Goods goods;
+    goods.set_id(id);
+    writer.load(goods);
+    ProtocolReader reader(recv_buf);
+    if(base->send(writer,reader)){
+        reader.get(goods);
+        GoodsData data(goods.id(),goods.name().c_str(),goods.price(),goods.seller(),
+        goods.type(),goods.remain(),goods.description().c_str());
+        return register_types[goods.type()](data);
+    }else{
+        return nullptr;
+    }
 }
+
 GoodsRecord::pGoodsVec GoodsRecord::get(const std::vector<int>&l){
     if(l.size()==0)return std::make_unique<std::vector<std::shared_ptr<Goods>>>();
-    std::stringstream ss;
-    ss<<"SELECT * FROM "
-     <<TABLE_NAME
-     <<" WHERE ID IN ( "
-     <<l[0];
-    if(l.size()>1)
-    for(int i=1;i<l.size();i++){
-        ss<<", "<<l[i];
+    ProtocolWriter writer(send_buf,Protocol::GOODS_GET_BY_ID_MULITIPLE,base->token());
+    protoData::GoodsArray array;
+    for(auto&t:l){
+        (array.add_goods())->set_id(t);
     }
-    ss<<" );";
-    // puts(ss.str().c_str());
+    writer.load(array);
+    ProtocolReader reader(recv_buf);
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
-    Database::exec(db,ss.str().c_str(),fetch_in_vector,pvec.get());
+    if(base->send(writer,reader)){
+        reader.get(array);
+        int n = array.goods_size();
+        for(int i=0;i<n;i++){
+           GoodsData data(array.goods(i).id(),array.goods(i).name().c_str(),array.goods(i).price(),array.goods(i).seller(),
+        array.goods(i).type(),array.goods(i).remain(),array.goods(i).description().c_str());
+            pvec->push_back(
+                register_types[array.goods(i).type()](data)
+            );
+        }
+        
+    }
     return pvec;
 }
 GoodsRecord::pGoodsVec GoodsRecord::get_user_goods(int seller_id){
-    static const char sql[] =  "SELECT * FROM %s WHERE SELLER=%d";
-    static char buffer[48];
+    ProtocolWriter writer(send_buf,Protocol::GOODS_GET_BY_SELLER,base->token());
+    protoData::Goods goods;
+    goods.set_seller(seller_id);
+    writer.load(goods);
+    ProtocolReader reader(recv_buf);
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
-    snprintf(buffer,48,sql,TABLE_NAME,seller_id);
-    Database::exec(db,buffer,fetch_in_vector,pvec.get());
+    if(base->send(writer,reader)){
+        protoData::GoodsArray array;
+        reader.get(array);
+        int n = array.goods_size();
+        for(int i=0;i<n;i++){
+           GoodsData data(array.goods(i).id(),array.goods(i).name().c_str(),array.goods(i).price(),array.goods(i).seller(),
+        array.goods(i).type(),array.goods(i).remain(),array.goods(i).description().c_str());
+            pvec->push_back(
+                register_types[array.goods(i).type()](data)
+            );
+        }
+        
+    }
     return pvec;
 }
 
 GoodsRecord::pGoodsVec GoodsRecord::get_all_goods(){
-    static const char sql[] =  "SELECT * FROM %s";
-    static char buffer[48];
+    ProtocolWriter writer(send_buf,Protocol::GOODS_GET_ALL,base->token());
+    ProtocolReader reader(recv_buf);
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
-    snprintf(buffer,48,sql,TABLE_NAME);
-    Database::exec(db,buffer,fetch_in_vector,pvec.get());
+    if(base->send(writer,reader)){
+        protoData::GoodsArray array;
+        reader.get(array);
+        int n = array.goods_size();
+        printf("n=%d",n);
+        for(int i=0;i<n;i++){
+           GoodsData data(array.goods(i).id(),array.goods(i).name().c_str(),array.goods(i).price(),array.goods(i).seller(),
+        array.goods(i).type(),array.goods(i).remain(),array.goods(i).description().c_str());
+            pvec->push_back(
+                register_types[array.goods(i).type()](data)
+            );
+        } 
+    }
     return pvec;
 }
 GoodsRecord::pGoodsVec GoodsRecord::get_goods_by_name(const string& search_for_name){
-    static const char sql[] =  "SELECT * FROM %s WHERE NAME LIKE '%%%s%%' OR DESCRIPTION LIKE '%%%s%%' COLLATE NOCASE";
-    //两个%%代表一个%,不区分大小写
-    static char buffer[256];
+    ProtocolWriter writer(send_buf,Protocol::GOODS_GET_BY_NAME,base->token());
+    protoData::Goods goods;
+    goods.set_name(search_for_name);
+    writer.load(goods);
+
+    ProtocolReader reader(recv_buf);
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
-    snprintf(buffer,256,sql,TABLE_NAME,search_for_name.c_str(),search_for_name.c_str());
-    Database::exec(db,buffer,fetch_in_vector,pvec.get());
+    if(base->send(writer,reader)){
+        protoData::GoodsArray array;
+        reader.get(array);
+        int n = array.goods_size();
+        for(int i=0;i<n;i++){
+           GoodsData data(array.goods(i).id(),array.goods(i).name().c_str(),array.goods(i).price(),array.goods(i).seller(),
+        array.goods(i).type(),array.goods(i).remain(),array.goods(i).description().c_str());
+            pvec->push_back(
+                register_types[array.goods(i).type()](data)
+            );
+        }   
+    }
     return pvec;
 }
+int GoodsRecord::set(GoodsData& data){
+    ProtocolWriter writer(send_buf,Protocol::GOOOS_CREATE,base->token());
+    protoData::Goods goods;
+    goods.set_name(data.name);
+    goods.set_price(data.price);
+    goods.set_remain(data.remain);
+    goods.set_seller(data.seller);
+    goods.set_type(data.type);
+    goods.set_description(data.description);
+
+    writer.load(goods);
+
+    ProtocolReader reader(recv_buf);
+
+    if(base->send(writer,reader)){
+        reader.get(goods);
+        return goods.id();
+    }else{
+        return -1;
+    } 
+}
 bool GoodsRecord::update(const GoodsData& data){
-    static const char sql[] =  "UPDATE %s "\
-                                "SET NAME = '%s'," \
-                                "PRICE = %f," \
-                                "SELLER = %d," \
-                                "REMAIN = %d ," \
-                                "DESCRIPTION = '%s'"\
-                                "WHERE ID=%d";
-    static char buffer[512];
-    snprintf(buffer,512,sql,TABLE_NAME,data.name.c_str(),data.price,data.seller,data.remain,data.description.c_str(),data.id);
-    return Database::exec(db,buffer,nullptr,nullptr);
+    ProtocolWriter writer(send_buf,Protocol::GOODS_UPDATE,base->token());
+    protoData::Goods goods;
+    goods.set_id(data.id);
+    goods.set_name(data.name);
+    goods.set_price(data.price);
+    goods.set_remain(data.remain);
+    goods.set_seller(data.seller);
+    goods.set_type(data.type);
+    goods.set_description(data.description);
+    writer.load(goods);
+
+    ProtocolReader reader(recv_buf);
+
+    return base->send(writer,reader);
 }
 void GoodsRecord::remove(int id){
-    auto& record = DiscountRecord::get_record();
-    record.remove_by_goods(id);
-    MetaRecord<Goods,GoodsData>::remove(id);
+    ProtocolWriter writer(send_buf,Protocol::GOODS_REMOVE,base->token());
+    protoData::Goods goods;
+    goods.set_id(id);
+    writer.load(goods);
+
+    ProtocolReader reader(recv_buf);
+
+    base->send(writer,reader);
 }
 
 
@@ -155,115 +222,111 @@ void GoodsRecord::remove(int id){
 *
 */
 bool DiscountRecord::make_discount(unsigned char type,int operand,double discount,double threshold){
-        static char buffer[192];
-        static const char sql[] = "INSERT INTO _DISCOUNT (TYPE,OPERAND,DISCOUNT,THRESHOLD) VALUES(%d ,%d,%f, %f); ";
-        sprintf(buffer,sql,type,operand,discount,threshold);
-        Database::exec(db,buffer,nullptr,nullptr);
-        return true;
+    ProtocolWriter writer(send_buf,Protocol::DISCOUNT_CREATE,base->token());
+    protoData::Discount dis;
+    dis.set_discount(discount);
+    dis.set_type(type);
+    dis.set_operand(operand);
+    dis.set_threshold(threshold);
+
+    writer.load(dis);
+    ProtocolReader reader(recv_buf);
+    return base->send(writer,reader);
 }
-void DiscountRecord::update_discount(int id,double discount,double thresold){
-    static char buffer[192];
-    
-    static const char sql[] = "UPDATE _DISCOUNT SET DISCOUNT = %f,THRESHOLD=%f WHERE ID=%d;";
-    sprintf(buffer,sql,discount,thresold,id);
-    // puts(buffer);
-    Database::exec(db,buffer,nullptr,nullptr);
+void DiscountRecord::update_discount(int id,double discount,double threshold){
+    ProtocolWriter writer(send_buf,Protocol::DISOCUNT_UPDATE,base->token());
+    protoData::Discount dis;
+    dis.set_id(id);
+    dis.set_discount(discount);
+    dis.set_threshold(threshold);
+    writer.load(dis);
+    ProtocolReader reader(recv_buf);
+    base->send(writer,reader);
 }
 
 std::shared_ptr<Discount> DiscountRecord::get_category_discount(int category){
-    static char buffer[192];
-    static const char sql[] = "SELECT * FROM _DISCOUNT WHERE TYPE = %d AND OPERAND = %d;";
-    sprintf(buffer,sql,Discount::TYPE_DISCOUNT,category);
-    Discount* tmp=nullptr;
-    Database::exec(db,buffer,fetch_to_object,&tmp);
-    // std::cout<<tmp->id()<<" "<<tmp->discount()<<std::endl;
-    return std::shared_ptr<Discount>(tmp);
+     ProtocolWriter writer(send_buf,Protocol::DISCOUNT_GET_CATEGORY_DISCOUNT,base->token());
+    protoData::Discount dis;
+    dis.set_type(Discount::TYPE_DISCOUNT);
+    dis.set_operand(category);
+
+    writer.load(dis);
+    ProtocolReader reader(recv_buf);
+    if(base->send(writer,reader)){
+        reader.get(dis);
+        switch (dis.type()){
+        case Discount::DISCOUNT:
+            return std::make_shared<DiscountSimple>(dis.id(),dis.type(),dis.operand(),dis.discount(),dis.threshold());
+        case Discount::TYPE_DISCOUNT:
+            return std::make_shared<DiscountCategory>(dis.id(),dis.type(),dis.operand(),dis.discount(),dis.threshold());
+        default:
+            break;
+        }
+    }
+    return nullptr;
 }
 pDisVec DiscountRecord::get_all_category_discount(){
-    static char buffer[192];
-    static const char sql[] = "SELECT * FROM _DISCOUNT WHERE TYPE = %d;";
-    sprintf(buffer,sql,Discount::TYPE_DISCOUNT);
+    ProtocolWriter writer(send_buf,Protocol::DISCOUNT_GET_ALL_CATEGORY,base->token());
+    protoData::Discount dis;
+    dis.set_type(Discount::TYPE_DISCOUNT);
+
+    writer.load(dis);
+    ProtocolReader reader(recv_buf);
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Discount>>>();
-    Database::exec(db,buffer,fetch_to_vector,&pvec);
-    // std::cout<<tmp->id()<<" "<<tmp->discount()<<std::endl;
+    if(base->send(writer,reader)){
+        protoData::DiscountArray array;
+        reader.get(array);
+        int n = array.discount_size();
+        for(int i =0;i<n;i++){
+            switch (array.discount(i).type()){
+            case Discount::DISCOUNT:
+                pvec->push_back(std::make_shared<DiscountSimple>(array.discount(i).id(),array.discount(i).type(),array.discount(i).operand(),array.discount(i).discount(),array.discount(i).threshold()));
+            case Discount::TYPE_DISCOUNT:
+                pvec->push_back(std::make_shared<DiscountCategory>(array.discount(i).id(),array.discount(i).type(),array.discount(i).operand(),array.discount(i).discount(),array.discount(i).threshold()));
+            }
+        }
+    }
     return pvec;
 }
 std::shared_ptr<Discount> DiscountRecord::get_goods_discount(int goods_id){
-    static char buffer[192];
-    static const char sql[] = "SELECT * FROM _DISCOUNT WHERE TYPE = %d AND OPERAND = %d;";
-    auto pvec = std::make_unique<std::vector<std::shared_ptr<Discount>>>();
-    sprintf(buffer,sql,Discount::DISCOUNT,goods_id);
-    // puts(buffer);
-    
-    Discount* tmp=nullptr;
-    Database::exec(db,buffer,fetch_to_object,&tmp);
-        // std::cout<<tmp->id()<<" "<<tmp->discount()<<std::endl;
+     ProtocolWriter writer(send_buf,Protocol::DISCOUNT_GET_GOODS_DISCOUNT,base->token());
+    protoData::Discount dis;
+    dis.set_type(Discount::DISCOUNT);
+    dis.set_operand(goods_id);
 
-
-    return std::shared_ptr<Discount>(tmp);
-}
-DiscountRecord::DiscountRecord():db(Database::get_db()){
-    static const char sql[]= "CREATE TABLE _DISCOUNT("  \
-                    "ID INTEGER PRIMARY KEY AUTOINCREMENT," \
-                    "TYPE            INT    NOT NULL," \
-                    "OPERAND         INT       NOT NULL," \
-                    "DISCOUNT        FLOAT         NOT NULL," \
-                    "THRESHOLD       FLOAT         NOT NULL," \
-                    "UNIQUE(TYPE,OPERAND) ON CONFLICT REPLACE );";
-    Database::exec(db,sql,nullptr,nullptr);
+    writer.load(dis);
+    ProtocolReader reader(recv_buf);
+    if(base->send(writer,reader)>1){
+        reader.get(dis);
+        switch (dis.type()){
+        case Discount::DISCOUNT:
+            return std::make_shared<DiscountSimple>(dis.id(),dis.type(),dis.operand(),dis.discount(),dis.threshold());
+        case Discount::TYPE_DISCOUNT:
+            return std::make_shared<DiscountCategory>(dis.id(),dis.type(),dis.operand(),dis.discount(),dis.threshold());
+        default:
+            break;
+        }
+    }
+    return nullptr;
 }
 
-int DiscountRecord::fetch_to_object(void*_data, int argc, char **argv, char **azColName){
-    if(argc!=5){
-        (*(Discount**)_data) = nullptr;
-        return -1;
-    }
-    
-    int type = atoi(argv[1]);
-    switch (type){
-    case Discount::DISCOUNT:
-        (*(Discount**)_data) = new DiscountSimple(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]),atof(argv[3]),atof(argv[4]));
-        break;
-    case Discount::TYPE_DISCOUNT:
-        (*(Discount**)_data)  =  new DiscountCategory(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]),atof(argv[3]),atof(argv[4]));
-        break;
-    default:
-        (*(Discount**)_data) = nullptr;
-        break;
-    }
-    return 0;
-}
-int DiscountRecord::fetch_to_vector(void*_data, int argc, char **argv, char **azColName){
-        if(argc!=5){
-        (*(Discount**)_data) = nullptr;
-        return -1;
-    }
-    auto& vec = *(std::unique_ptr<std::vector<std::shared_ptr<Discount>>>*)_data;
-    int type = atoi(argv[1]);
-    switch (type){
-    case Discount::DISCOUNT:
-
-        vec->emplace_back(std::make_shared<DiscountSimple>(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]),atof(argv[3]),atof(argv[4])));
-        break;
-    case Discount::TYPE_DISCOUNT:
-        vec->emplace_back(std::make_shared<DiscountCategory>(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]),atof(argv[3]),atof(argv[4])));
-        break;
-    default:
-
-
-        break;
-    }
-    return 0;
-}
 void DiscountRecord::remove(int id){
-    static char buffer[192];
-    static const char sql[] = "DELETE FROM _DISCOUNT WHERE ID=%d;";
-    sprintf(buffer,sql,id);
-    Database::exec(db,buffer,nullptr,nullptr);
+    ProtocolWriter writer(send_buf,Protocol::DISCOUNT_REMOVE,base->token());
+    protoData::Discount dis;
+    dis.set_id(id);
+    // dis.set_operand(goods_id);
+
+    writer.load(dis);
+    ProtocolReader reader(recv_buf);
+    base->send(writer,reader);
 }
 void DiscountRecord::remove_by_goods(int goods_id){
-    static char buffer[192];
-    static const char sql[] = "DELETE FROM _DISCOUNT WHERE TYPE=%d AND OPERAND=%d;";
-    sprintf(buffer,sql,Discount::DISCOUNT,goods_id);
-    Database::exec(db,buffer,nullptr,nullptr);
+    ProtocolWriter writer(send_buf,Protocol::DISCOUNT_REMOVE_BY_GOODS,base->token());
+    protoData::Discount dis;
+    dis.set_operand(goods_id);
+    // dis.set_operand(goods_id);
+
+    writer.load(dis);
+    ProtocolReader reader(recv_buf);
+    base->send(writer,reader);
 }

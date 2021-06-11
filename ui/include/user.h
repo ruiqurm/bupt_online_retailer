@@ -22,7 +22,7 @@ class UserData{
         int id;
         double balance;
         int type;
-        UserData(){}
+        UserData():id(-1){}
         UserData(int id,const char*username,
                 const char*password,double balance,
                 int type):id(id),balance(balance),type(type),username(username),password(password){}
@@ -108,7 +108,7 @@ class UserTemplate: public User{
 class test_usermanager;
 #endif
 
-class UserRecord final{
+class UserRecord{
     #if DEBUG==1
         friend class test_usermanager;
     #endif
@@ -125,57 +125,26 @@ class UserRecord final{
         UserData* get(const std::string&username);
         UserData* get(int id);
         string get_username(int id);
-        void remove(int id);
-        void remove(const std::string& username);
-        void clear();
+        UserData* login(const string&username,const string&password);
+        void logout();
+        // void remove(int id);
+        // void remove(const std::string& username);
+
         std::shared_ptr<User> create_user(UserData* data){
             if(data==nullptr)return std::shared_ptr<User>(nullptr);
             else return register_types[data->type](data);
         }
-        unsigned short register_type(unsigned short id, p_user_construct factoryMethod);
-        int load();
-        static constexpr const char* USER_FILE_NAME="user-record.txt";
-        bool exist (const std::string& name) {
-            struct stat buffer;   
-            return (stat (name.c_str(), &buffer) == 0); 
-        }
-        
+
+        unsigned short register_type(unsigned short id, p_user_construct factoryMethod);    
     private:
-        UserRecord();
+        UserRecord():base(Database::get_database()){}
         ~UserRecord(){}
         UserRecord(const UserRecord&){};
         UserRecord& operator=(const UserRecord&);
-
+        Database* base;
+        char send_buf[8192];
+        char recv_buf[8192];
         p_user_construct register_types[256];
-
-        /*
-        * 内存缓冲
-        */
-        std::map<std::string,UserData> name_to_data;
-        std::map<int,std::string> pk_to_name;
-        int max_pk;
-
-        /*
-        * 文件操作
-        */
-        std::fstream database;
-        static constexpr int MAX_LINE = sizeof(UserData) + 10;
-        void insert_data(const UserData&data);
-        void remove_data(int id);
-        void set_write_cursor_to_nth_line(int id){
-            database.seekp((id-1)*(MAX_LINE));
-        }
-        void set_read_cursor_to_nth_line(int  id){
-            database.seekg((id-1)*(MAX_LINE));
-        }
-        void write_LF_nth_line(int id){
-            #ifdef WIN32
-            database.seekp(id*MAX_LINE -2);
-            #else
-            database.seekp(id*MAX_LINE -1);
-            #endif
-            database<<'\n';
-        }
 };
 
 
@@ -185,66 +154,3 @@ const unsigned short UserTemplate<TYPE, IMPL>::USER_TYPE_ID = UserRecord::get_re
 
 
 
-/*
-* 内联实现
-*/
-inline UserRecord::UserRecord(){
-    
-    if (exist(USER_FILE_NAME)){
-        load();
-        database.open(USER_FILE_NAME,std::ios::in|std::ios::out);
-        //不会覆盖原来的内容
-    }else{
-        database.open(USER_FILE_NAME,std::ios::out);
-    }
-    if (!database.is_open()){
-        throw "can't open user record file.";
-    }
-}
-inline void UserRecord::insert_data(const UserData&data){
-    if(data.id<=0)return;
-    set_write_cursor_to_nth_line(data.id);
-    database<<data.id<<" "<<data.username<<" "<<data.password<<" "<<data.balance<<" "<<data.type<<"\0\0\0";
-    write_LF_nth_line(data.id);
-}
-inline void UserRecord::remove_data(int id){
-    if(id<=0)return;
-    //不判断是否存在了.
-    set_write_cursor_to_nth_line(id);
-    database<<"0\0";database.flush();
-    // write_LF_nth_line(id);
-}
-inline void UserRecord::remove(int id){
-    auto it = pk_to_name.find(id);
-    if(it==pk_to_name.end())return;
-    name_to_data.erase(it->second);
-    pk_to_name.erase(id);
-    remove_data(id);
-}
-inline void UserRecord::remove(const std::string& username){
-    auto it = name_to_data.find(username);
-    if(it==name_to_data.end())return;
-    int id = it->second.id;
-    pk_to_name.erase(it->second.id);
-    name_to_data.erase(it);
-    remove_data(id);
-}
-inline UserData* UserRecord::get(const string&username){
-    auto it = name_to_data.find(username);
-    if(it!=name_to_data.end()){
-        return &it->second;
-    }
-    return nullptr;
-}
-
-inline UserData* UserRecord::get(int id){
-    auto it = pk_to_name.find(id);
-    if(it!=pk_to_name.end()){
-        return get(it->second);
-    }
-    return nullptr;
-}
-inline string UserRecord::get_username(int id){
-    auto it =pk_to_name.find(id);
-    return (it!=pk_to_name.end())?it->second:string();
-}
