@@ -145,7 +145,7 @@ class ProtocolReader{
 
         const char* token(){return ((Protocol*)buffer)->token;}
         char* buf(){return buffer;}
-        int buf_size(){return _buf_size;}
+        int buf_size(){return 8192;}
     private:
         char*buffer;
         int _buf_size;

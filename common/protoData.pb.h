@@ -372,7 +372,7 @@ class Goods final :
     kTypeFieldNumber = 6,
     kRemainFieldNumber = 7,
   };
-  // string name = 1;
+  // bytes name = 1;
   void clear_name();
   const std::string& name() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -386,7 +386,7 @@ class Goods final :
   std::string* _internal_mutable_name();
   public:
 
-  // string description = 2;
+  // bytes description = 2;
   void clear_description();
   const std::string& description() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -1922,7 +1922,7 @@ GoodsArray::goods() const {
 
 // Goods
 
-// string name = 1;
+// bytes name = 1;
 inline void Goods::clear_name() {
   name_.ClearToEmpty();
 }
@@ -1934,7 +1934,7 @@ template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
 void Goods::set_name(ArgT0&& arg0, ArgT... args) {
  
- name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+ name_.SetBytes(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
   // @@protoc_insertion_point(field_set:protoData.Goods.name)
 }
 inline std::string* Goods::mutable_name() {
@@ -1968,7 +1968,7 @@ inline void Goods::set_allocated_name(std::string* name) {
   // @@protoc_insertion_point(field_set_allocated:protoData.Goods.name)
 }
 
-// string description = 2;
+// bytes description = 2;
 inline void Goods::clear_description() {
   description_.ClearToEmpty();
 }
@@ -1980,7 +1980,7 @@ template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
 void Goods::set_description(ArgT0&& arg0, ArgT... args) {
  
- description_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+ description_.SetBytes(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
   // @@protoc_insertion_point(field_set:protoData.Goods.description)
 }
 inline std::string* Goods::mutable_description() {

@@ -11,6 +11,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
+#include<mutex>
+
 class Database{
     public:
         static Database* get_database(){
@@ -56,26 +58,7 @@ class Database{
             }
             return sockfd;  
         }
-        int send(ProtocolWriter& w,ProtocolReader&r){
-            int n;
-            if ((n = ::send(sockfd,w.buf(),w.size(),0))<=0){
-                printf("ERROR writing to socket,n=%d",n);
-                return false;
-            }
-            // log_info("recv_buf=%ld,r.buf()=%ld",recv_buf,r.buf());
-            if ((n = recv(sockfd,r.buf(),r.buf_size(),0))<=0){
-                printf("ERROR writing to socket,n=%d",n);
-                return false;
-            }
-            if (r.status() != Protocol::OK && r.status() != Protocol::OK_LOGOUT){
-                printf("r.status =%d, %s",r.status(),protocol_status_to_str(r.status()));
-                return false;
-            }
-            if(r.length()>0){
-                return 2;
-            }
-            return 1;
-        }
+        int send(ProtocolWriter& w,ProtocolReader&r);
         int sock()const{return sockfd;}
         char* token(){return _token;}
         const char* token()const{return _token;}

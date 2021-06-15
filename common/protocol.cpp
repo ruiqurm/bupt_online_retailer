@@ -4,6 +4,12 @@
 extern "C" {
 #include"log.h"
 }
+#include<iostream>
+using std::fstream;
+// fstream& operator<<(fstream& fs,Proto& v){
+
+// }
+
 ProtocolWriter::ProtocolWriter(char *_buffer,int type,const char* token):
     _size(0),buffer(_buffer){
     ((Protocol*)buffer)->transaction_id = time(NULL) % 65536;

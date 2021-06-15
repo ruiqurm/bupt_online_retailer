@@ -73,7 +73,7 @@ void UserLoginExecutor::execImp(){
         user = record.get_user(form.username());
         set_length(user->ByteSizeLong());
         user->SerializeToArray(write_data,user->ByteSizeLong());
-        log_debug("token=%.16s",token.c_str());
+        log_debug("token=%.16s username=%s,type=%d",token.c_str(),user->username().c_str(),user->type());
     }else{
         set_error(Protocol::RUN_FAILED);
         log_debug("登录失败. username=%s,password=%s",form.username().c_str(),form.password().c_str());
@@ -157,10 +157,10 @@ void UserInfoExecutor::execImp(){
 void GoodsCreateExecutor::execImp(){
     protoData::Goods goods;
     goods.ParseFromArray(read_data,((Protocol*)read_buf)->length);
-    log_debug("创建商品\nid=%d\nname=%s\nprice=%f\ndescription=%s\ncount=%d",goods.id(),goods.name().c_str(),goods.price(),goods.description().c_str(),goods.remain());
     GoodsDatabase database;
     int id=  database.create(goods);
     goods.set_id(id);
+    log_debug("创建商品;报文长度%d\nid=%d\nname=%s\nprice=%f\ndescription=%s\ncount=%d",goods.ByteSizeLong(),goods.id(),goods.name().c_str(),goods.price(),goods.description().c_str(),goods.remain());
     goods.SerializeToArray(write_data,goods.ByteSizeLong());
     set_length(goods.ByteSizeLong());
 }
@@ -170,9 +170,14 @@ void GoodsGetByIdExecutor::execImp(){
     log_debug("获取商品id=%d",goods.id());
     if(goods.id()>0){
         GoodsDatabase database;
+        goods.set_type(-1);
         database.get(goods);
-        goods.SerializeToArray(write_data,goods.ByteSizeLong());
-        set_length(goods.ByteSizeLong());
+        if (goods.type()>0){
+            goods.SerializeToArray(write_data,goods.ByteSizeLong());
+            set_length(goods.ByteSizeLong());
+        }else{
+            set_length(0);
+        }
     }else{
         set_error(Protocol::PARAMETER_ERROR);
     }
@@ -264,15 +269,16 @@ void GoodsRemoveExecutor::execImp(){
 void DiscountCreateExecutor::execImp(){
     protoData::Discount discount;
     discount.ParseFromArray(read_data,((Protocol*)read_buf)->length);
+    DiscountDatabase database;
+    int id = database.create(discount);
+    discount.set_id(id);
     log_debug("创建discount\n"\
+             "id=%d\n"\
              "type=%d\n"\
              "operand=%d\n"\
              "discount=%f\n"\
              "threshold=%f\n",
-    discount.type(),discount.operand(),discount.discount(),discount.threshold());
-    DiscountDatabase database;
-    int id = database.create(discount);
-    discount.set_id(id);
+    discount.id(),discount.type(),discount.operand(),discount.discount(),discount.threshold());
     discount.SerializeToArray(write_data,discount.ByteSizeLong());
     set_length(discount.ByteSizeLong());
 }
@@ -311,19 +317,30 @@ void DiscountGetGoodsDiscountExecutor::execImp(){
     discount.ParseFromArray(read_data,((Protocol*)read_buf)->length);
     log_debug("获取关于商品%d的打折记录",discount.operand());
     DiscountDatabase database;
+    discount.set_discount(-1);
     database.get_goods_discount(discount);
-    discount.SerializeToArray(write_data,discount.ByteSizeLong());
-    set_length(discount.ByteSizeLong());
+    if(discount.discount()>0){
+        discount.SerializeToArray(write_data,discount.ByteSizeLong());
+        set_length(discount.ByteSizeLong());
+    }else{
+        set_length(0);
+    }
+    
 }
 void DiscountGetCategoryDiscountExecutor::execImp(){
     protoData::Discount discount;
     discount.ParseFromArray(read_data,((Protocol*)read_buf)->length);
     log_debug("获取关于商品类别%d的打折记录",discount.operand());
     DiscountDatabase database;
+    discount.set_discount(-1);
     database.get_category_discount(discount);
     // discount
-    discount.SerializeToArray(write_data,discount.ByteSizeLong());
-    set_length(discount.ByteSizeLong());
+    if(discount.discount()>0){
+        discount.SerializeToArray(write_data,discount.ByteSizeLong());
+        set_length(discount.ByteSizeLong());
+    }else{
+        set_length(0);
+    }
 }
 void DiscountRemoveByGoodsExecutor::execImp(){
     protoData::Discount discount;
@@ -351,10 +368,15 @@ void TransactionGetExecutor::execImp(){
     transcation.ParseFromArray(read_data,((Protocol*)read_buf)->length);
     if(transcation.id()>0){
         TransactionDatabase database;
+        transcation.set_volume(-1);
         database.get(transcation);
         log_debug("获取id=%d的记录",transcation.id());
-        transcation.SerializeToArray(write_data,transcation.ByteSizeLong());
-        set_length(transcation.ByteSizeLong());
+        if(transcation.volume()>0){
+            transcation.SerializeToArray(write_data,transcation.ByteSizeLong());
+            set_length(transcation.ByteSizeLong());
+        }else{
+            set_length(0);
+        }
     }else{
         set_error(Protocol::PARAMETER_ERROR);
     }

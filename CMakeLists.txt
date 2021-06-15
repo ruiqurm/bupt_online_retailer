@@ -44,6 +44,8 @@ add_custom_target (generate
     COMMAND ${CMAKE_COMMAND} -E  # 创建libs文件夹
         make_directory ${dist_gen_name}/libs
     COMMAND ${CMAKE_COMMAND} -E 
+        copy ${CMAKE_BINARY_DIR}/common/libprotocol.a ${dist_gen_name}/libs/
+    COMMAND ${CMAKE_COMMAND} -E 
         copy ${CMAKE_BINARY_DIR}/client/src/libbupt_online_ratailer_static.a ${dist_gen_name}/libs/
     COMMAND echo 在${CMAKE_BINARY_DIR}/dist/下生成
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})

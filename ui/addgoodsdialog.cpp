@@ -72,7 +72,7 @@ void AddGoodsDialog::on_pushButton_clicked()
             return;
         }
     }
-    qDebug("折扣=%f",discount);
+//    qDebug("折扣=%f",discount);
 
     //处理数量
     int count = 0;
@@ -120,9 +120,11 @@ void AddGoodsDialog::on_pushButton_clicked()
         GoodsData data(ui->name->text().toStdString(),price,user->id(),ui->goodstype->currentIndex(),
                        count,ui->description->toPlainText().toStdString());
         int id = record.set(data);
-        auto& disrecord  = DiscountRecord::get_record();
-        disrecord.make_discount(Discount::DISCOUNT,id,discount);
-//        if(market!=nullptr)emit update_market();
+        if(ui->has_discount->isChecked()){
+            auto& disrecord  = DiscountRecord::get_record();
+            disrecord.make_discount(Discount::DISCOUNT,id,discount);
+        }
+
         if(manage)emit update_management(record.get(id));
         msgBox.setText("创建成功");
     }else{

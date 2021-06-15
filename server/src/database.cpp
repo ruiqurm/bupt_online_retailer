@@ -50,7 +50,7 @@ bool UserRecordWriter::_register(protoData::UserForm & form){
      * @brief 只检查是否存在，用户名和密码是否带空白符
      * 
      */
-    log_info("注册账号，用户名为%s,密码为%s",form.username().c_str(),form.password().c_str());
+    log_info("注册账号，用户名为%s,密码为%s,type=%d",form.username().c_str(),form.password().c_str(),form.type());
     auto it = name_to_data.find(form.username());
     if(it != name_to_data.end()){
         // last_error = "account has been registered";
@@ -173,10 +173,13 @@ int UserRecordWriter::load(){
             f>>tmpfloat;
             tmpdata.set_balance(tmpfloat);
             f>>tmpint;
+            // log_debug("%d",tmpint);
+            tmpdata.set_type(tmpint);
             name_to_data.emplace(tmpdata.username(),tmpdata);
             id_to_name.emplace(tmpdata.id(),tmpdata.username());
             max_pk = std::max(max_pk,tmpdata.id());
             count++;
+            log_debug("username=%s password=%s type=%d balance=%f",tmpdata.username().c_str(),tmpdata.password().c_str(),tmpdata.type(),tmpdata.balance());
         }
         f.seekg(i+MAX_LINE);
         i+=MAX_LINE;
@@ -187,7 +190,8 @@ void UserRecordWriter::insert_data(protoData::UserForm& data){
     max_pk++;
     int id = max_pk;
     set_write_cursor_to_nth_line(id);
-    database<<id<<" "<<data.username()<<" "<<data.password()<<" "<<0<<" "<<data.type()<<"\0\0\0";
+    database<<id<<" "<<data.username()<<" "<<data.password()<<" "<<0<<" "<<data.type();
+    database.put('\0');database.put('\0');
     write_LF_nth_line(id);
 }
 void UserRecordWriter::update(protoData::User& data){
@@ -232,7 +236,7 @@ void UserRecordWriter::write_LF_nth_line(int id){
     #else
     database.seekp(id*MAX_LINE -1);
     #endif
-    database<<'\n';
+    database.put('\n');
 }
 void UserRecordWriter::set_write_cursor_to_nth_line(int id){
     database.seekp((id-1)*(MAX_LINE));
@@ -571,7 +575,7 @@ void TransactionDatabase::set_finished(protoData::Transaction&transaction){
 void TransactionDatabase::get_transaction(protoData::Transaction&transaction,protoData::TransactionArray &array){
     static char buffer[96];
     static const char sql[] = "SELECT * FROM _TRANSACTION WHERE FINISHED = %d AND (_FROM = %d OR _TO = %d);";
-    sprintf(buffer,sql,transaction.finished(),transaction.from(),transaction.to());
+    sprintf(buffer,sql,transaction.finished(),transaction.from(),transaction.from());
     exec(buffer,fetch_to_vector,&array);
 }
 

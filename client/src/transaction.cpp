@@ -13,7 +13,7 @@ std::shared_ptr<Transaction> TransactionRecord::get(int id){
     tran.set_id(id);
     writer.load(tran);
     ProtocolReader reader(recv_buf);
-    if(base->send(writer,reader)){
+    if(base->send(writer,reader)>1){
        reader.get(tran);
        return std::make_shared<Transaction>(tran.id(),tran.from(),tran.from_name(),tran.to(),tran.to_name(),tran.finished(),
        tran.volume(),tran.detail(),tran.timestamp());
@@ -142,11 +142,12 @@ string Transaction::write_detail(const std::map<int,std::tuple<string,int,double
 }
 
 bool Transaction::set_finished(){
+    std::cout<<"transaction_id="<<_id<<" is_fin="<<_finished<<std::endl;
     if(_finished==false&&_id>0){
         auto to_u = to();
         // std::cout<<to_u->id();
         if(to_u->balance() < _volume){
-;
+            std::cout<<"没有足够的钱";
             return false;
         }
         _finished=true;

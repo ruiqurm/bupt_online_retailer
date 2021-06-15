@@ -68,7 +68,7 @@ std::shared_ptr<Goods> GoodsRecord::get(int id){
     goods.set_id(id);
     writer.load(goods);
     ProtocolReader reader(recv_buf);
-    if(base->send(writer,reader)){
+    if(base->send(writer,reader) > 1){
         reader.get(goods);
         GoodsData data(goods.id(),goods.name().c_str(),goods.price(),goods.seller(),
         goods.type(),goods.remain(),goods.description().c_str());
@@ -129,7 +129,7 @@ GoodsRecord::pGoodsVec GoodsRecord::get_all_goods(){
     ProtocolWriter writer(send_buf,Protocol::GOODS_GET_ALL,base->token());
     ProtocolReader reader(recv_buf);
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
-    if(base->send(writer,reader)){
+    if(base->send(writer,reader)>1){
         protoData::GoodsArray array;
         reader.get(array);
         int n = array.goods_size();
@@ -169,6 +169,7 @@ GoodsRecord::pGoodsVec GoodsRecord::get_goods_by_name(const string& search_for_n
 int GoodsRecord::set(GoodsData& data){
     ProtocolWriter writer(send_buf,Protocol::GOOOS_CREATE,base->token());
     protoData::Goods goods;
+    goods.set_id(-12);
     goods.set_name(data.name);
     goods.set_price(data.price);
     goods.set_remain(data.remain);
@@ -180,8 +181,9 @@ int GoodsRecord::set(GoodsData& data){
 
     ProtocolReader reader(recv_buf);
 
-    if(base->send(writer,reader)){
+    if(base->send(writer,reader)>1){
         reader.get(goods);
+        // std::cout<<goods.name()<<std::endl;
         return goods.id();
     }else{
         return -1;
@@ -252,7 +254,7 @@ std::shared_ptr<Discount> DiscountRecord::get_category_discount(int category){
 
     writer.load(dis);
     ProtocolReader reader(recv_buf);
-    if(base->send(writer,reader)){
+    if(base->send(writer,reader)>1){
         reader.get(dis);
         switch (dis.type()){
         case Discount::DISCOUNT:

@@ -180,6 +180,7 @@ bool UserRecord::update(const UserData&data){
     u.set_username(data.username);
     u.set_password(data.password);
     u.set_type(data.type);
+    u.set_balance(data.balance);
     writer.load(u);
     ProtocolReader reader(recv_buf);
     base->send(writer,reader);

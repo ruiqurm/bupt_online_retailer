@@ -12,7 +12,9 @@
 extern "C" {
 #include"log.h"
 }
+#include <mutex>
 using std::thread;
+std::mutex g_mutex;
 
 int init(){
     
@@ -84,6 +86,7 @@ void handle_with_request(int sockfd){
     bool has_authenticated = false;
     while(true){
         size = 8192;
+        
         n = recv(sockfd,read_buffer,size,0);
         if (n <= 0) {
             if(n==0){
@@ -93,14 +96,17 @@ void handle_with_request(int sockfd){
             }
             break;
         }
+        g_mutex.lock();
         if ((executor = ExecutorFactory::get_executor(read_buffer,write_buffer,user))!=nullptr){
             executor->exec();
             user = executor->get_user();
         }
+        g_mutex.unlock();
         n = send(sockfd,write_buffer,executor->size(),0);
         if (n <= 0) {delete executor;executor = nullptr;;log_error("ERROR writing from socket");break;}
         delete executor;
         executor = nullptr;
     }
+    g_mutex.unlock();
     close(sockfd);
 }

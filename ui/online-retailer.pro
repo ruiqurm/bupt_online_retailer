@@ -66,9 +66,11 @@ FORMS += \
     usergoodsmanagement.ui
 LIBS += -L$$PWD/libs -lbupt_online_ratailer_static
 
-LIBS += -lprotobuf\
+
+LIBS += -lprotocol\
+        -lprotobuf\
         -lpthread\
-        -ldl
+        -ldl\
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

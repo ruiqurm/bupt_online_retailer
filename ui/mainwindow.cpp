@@ -66,8 +66,8 @@ void MainWindow::login(){
     return;
 }
 void MainWindow::on_login(std::shared_ptr<User> user){
-    qDebug("receive :\nusername:%s",
-           user->username().c_str());
+    qDebug("receive :\nusername:%s,type=%d",
+           user->username().c_str(),user->get_user_type());
     this->user = user;
     if(user->get_user_type()==USER_TYPE::seller&&sellerMenu==nullptr){
         sellerMenu = ui->menubar->addMenu("商品管理");

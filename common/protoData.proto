@@ -1,17 +1,25 @@
-import "google/protobuf/wrappers.proto";
 syntax = "proto3";
+
 package protoData;
 message GoodsArray {
     repeated Goods goods = 1;
 }
 message Goods{
-    string name = 1;
-    string description = 2;
+    
+    bytes name = 1;
+    bytes description = 2;
     double price = 3;
     int32 seller = 4;// primary key of seller
     int32 id = 5;
     int32 type = 6;
     int32 remain = 7;
+    // google.protobuf.stringValue name = 1;
+    // google.protobuf.stringValue description = 2;
+    // double  price = 3;
+    // google.protobuf.int32Value seller = 4;// primary key of seller
+    // google.protobuf.int32Value id = 5;
+    // google.protobuf.int32Value type = 6;
+    // google.protobuf.int32Value remain = 7;
 }
 
 message User{
@@ -20,6 +28,11 @@ message User{
     string password = 3;
     double balance = 4;
     int32 type = 5;
+    // google.protobuf.int32Value id = 1;
+    // google.protobuf.stringValue username = 2;
+    // string password = 3;
+    // double balance = 4;
+    // google.protobuf.int32Value type = 5;
 }
 message UserForm{
     string username = 1;

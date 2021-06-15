@@ -1,5 +1,39 @@
 #include "database.h"
+std::mutex g_lock;
+int Database::send(ProtocolWriter& w,ProtocolReader&r){
+	g_lock.lock();
+	int n;
 
+	if ((n = ::send(sockfd,w.buf(),w.size(),0))<=0){
+	printf("ERROR writing to socket,n=%d",n);
+	g_lock.unlock();
+	return false;
+	}
+	// log_info("recv_buf=%ld,r.buf()=%ld",recv_buf,r.buf());
+    printf("buf_size=%d\n",r.buf_size());
+    n=0;
+	while( (n = recv(sockfd,r.buf(),r.buf_size(),0))==0){
+        printf("接收失败\n");
+    }
+	if(n<0){
+        printf("ERROR writing to socket,n=%d",n);
+        g_lock.unlock();
+        return false;
+	}
+	if (r.status() != Protocol::OK && r.status() != Protocol::OK_LOGOUT){
+	printf("r.status =%d, %s\n",r.status(),protocol_status_to_str(r.status()));
+	g_lock.unlock();
+	return false;
+	}
+	std::cout<<r.id()<<" "<<r.type()<<" "<<std::endl;
+	std::cout<<"length="<<r.length()<<" "<<n-28<<std::endl;
+	if(r.length()>0){
+	g_lock.unlock();
+	return 2;
+	}
+	g_lock.unlock();
+	return 1;
+}
 // UserRecord::UserRecord(){
 //     if (file_exist(USER_FILE_NAME)){
 //         load();

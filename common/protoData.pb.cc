@@ -287,7 +287,7 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 const char descriptor_table_protodef_protoData_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\017protoData.proto\022\tprotoData\"-\n\nGoodsArr"
   "ay\022\037\n\005goods\030\001 \003(\0132\020.protoData.Goods\"s\n\005G"
-  "oods\022\014\n\004name\030\001 \001(\t\022\023\n\013description\030\002 \001(\t\022"
+  "oods\022\014\n\004name\030\001 \001(\014\022\023\n\013description\030\002 \001(\014\022"
   "\r\n\005price\030\003 \001(\001\022\016\n\006seller\030\004 \001(\005\022\n\n\002id\030\005 \001"
   "(\005\022\014\n\004type\030\006 \001(\005\022\016\n\006remain\030\007 \001(\005\"U\n\004User"
   "\022\n\n\002id\030\001 \001(\005\022\020\n\010username\030\002 \001(\t\022\020\n\010passwo"
@@ -598,21 +598,19 @@ const char* Goods::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inte
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // string name = 1;
+      // bytes name = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
           auto str = _internal_mutable_name();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "protoData.Goods.name"));
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // string description = 2;
+      // bytes description = 2;
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
           auto str = _internal_mutable_description();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "protoData.Goods.description"));
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -680,23 +678,15 @@ failure:
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // string name = 1;
+  // bytes name = 1;
   if (!this->_internal_name().empty()) {
-    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
-      this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
-      "protoData.Goods.name");
-    target = stream->WriteStringMaybeAliased(
+    target = stream->WriteBytesMaybeAliased(
         1, this->_internal_name(), target);
   }
 
-  // string description = 2;
+  // bytes description = 2;
   if (!this->_internal_description().empty()) {
-    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
-      this->_internal_description().data(), static_cast<int>(this->_internal_description().length()),
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
-      "protoData.Goods.description");
-    target = stream->WriteStringMaybeAliased(
+    target = stream->WriteBytesMaybeAliased(
         2, this->_internal_description(), target);
   }
 
@@ -746,17 +736,17 @@ size_t Goods::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // string name = 1;
+  // bytes name = 1;
   if (!this->_internal_name().empty()) {
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
         this->_internal_name());
   }
 
-  // string description = 2;
+  // bytes description = 2;
   if (!this->_internal_description().empty()) {
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
         this->_internal_description());
   }
 
