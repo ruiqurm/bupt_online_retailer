@@ -3,7 +3,7 @@
 *.cpp linguist-language=cpp
 *.cc linguist-language=cpp
 *.ui linguist-language=cpp
-server/src/sqlite3.c linguist-documentation=false
-server/src/shell.c linguist-documentation=false
-server/include/sqlite3ext.h linguist-documentation=false
-server/include/sqlite3.h linguist-documentation=false
+server/src/sqlite3.c linguist-vendored
+server/src/shell.c linguist-vendored
+server/include/sqlite3ext.h linguist-vendored
+server/include/sqlite3.h linguist-vendored
