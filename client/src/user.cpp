@@ -66,6 +66,11 @@ std::shared_ptr<User> User::login(const string& username,const string& password)
     }
     return record.create_user(data);
 }
+void User::logout(){
+    auto& record = UserRecord::get_record();
+    record.logout();
+    data = nullptr;
+}
 bool User::save(){
     auto &record = UserRecord::get_record();
     #if DEBUG==1

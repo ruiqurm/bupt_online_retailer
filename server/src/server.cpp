@@ -167,15 +167,17 @@ void GoodsCreateExecutor::execImp(){
 void GoodsGetByIdExecutor::execImp(){
     protoData::Goods goods;
     goods.ParseFromArray(read_data,((Protocol*)read_buf)->length);
-    log_debug("获取商品id=%d",goods.id());
+    goods.set_remain(-1);
     if(goods.id()>0){
         GoodsDatabase database;
         goods.set_type(-1);
         database.get(goods);
-        if (goods.type()>0){
+        if (goods.remain() != -1){
+            log_debug("获取到商品id=%d",goods.id());
             goods.SerializeToArray(write_data,goods.ByteSizeLong());
             set_length(goods.ByteSizeLong());
         }else{
+            log_debug("未获取到商品id=%d",goods.id());
             set_length(0);
         }
     }else{

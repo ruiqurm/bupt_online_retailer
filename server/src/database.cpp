@@ -151,7 +151,7 @@ UserRecordWriter::UserRecordWriter(){
     if (!database.is_open()){
         throw "can't open user record file.";
     }
-    log_debug("init user-record done");
+    log_info("init user-record done");
 }
 int UserRecordWriter::load(){
     int count=0,i=0;
@@ -163,6 +163,7 @@ int UserRecordWriter::load(){
     double tmpfloat;
     int tmpint;
     string tmpstr;
+    log_debug("读取本地用户数据:");
     while(f>>tmpint){
         tmpdata.set_id(tmpint);
         if(tmpdata.id()!=0){

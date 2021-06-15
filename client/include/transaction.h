@@ -17,10 +17,13 @@ class Transaction{
             _from_name = record.get_username(from);
             _to_name = record.get_username(to);
             auto &grecord = GoodsRecord::get_record();
+            std::cout<<"本份data有"<<data.size()<<"条"<<std::endl;
             for(auto&it:data){
+                std::cout<< "id:"<<it.first<<std::endl;
                 auto g = grecord.get(it.first);
                 if(g!=nullptr){
                     //不保证正确性
+                    std::cout<< "商品名:"<<g->name()<<std::endl;
                     g->remain() -=  std::get<1>(it.second);
                     g->save();
                 }

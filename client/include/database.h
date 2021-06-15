@@ -16,48 +16,14 @@
 class Database{
     public:
         static Database* get_database(){
-            static int sockfd = init();
-            static Database db(sockfd);
+            static Database db;
             return &db;
         }
-        static int init(){
-            int portno, n;
-            struct sockaddr_in serv_addr;
-            struct hostent *server;
-            int size; 
-            int retry[] {1,2,4,8,16,32,32,32,32,32};
-            portno = 8888;
-            int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-            if (sockfd < 0) 
-                printf("ERROR opening socket");
-            server = gethostbyname("127.0.0.1");
-            if (server == NULL) {
-                fprintf(stderr,"ERROR, no such host\n");
-                exit(0);
-            }
-            memset(&serv_addr,0,sizeof(serv_addr));
-            serv_addr.sin_family = AF_INET;
-            memcpy(server->h_addr, 
-                &serv_addr.sin_addr.s_addr,
-                server->h_length);
-            serv_addr.sin_port = htons(portno);
-            bool ok = false;
-            for(int i =0;i<10;i++){
-                if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
-                    printf("ERROR connecting");
-                    printf("%ds后尝试重连\n",retry[i]);
-                    sleep(retry[i]*1000);
-                }else{
-                    ok = true;
-                    break;
-                }
-            }
-            if(!ok){
-                printf("连接网络失败...退出\n");
-                exit(0);
-            }
-            return sockfd;  
-        }
+        static bool retry();
+
+        // 使用二进制指数回退
+        static void retry_until_connected();
+        static int init();
         int send(ProtocolWriter& w,ProtocolReader&r);
         int sock()const{return sockfd;}
         char* token(){return _token;}
@@ -66,9 +32,13 @@ class Database{
             memcpy(_token,s,16);
             _token[16]=0;
         }
-        Database(int a):sockfd(a){}
+        static bool is_connected(){return _is_connected;}
+        // Database(int a):sockfd(a){}
     private:
-        int sockfd;
+        static bool _is_connected;
+        static int sockfd;
+        static struct sockaddr_in server_addr;
         char _token[18];
+
 
 };

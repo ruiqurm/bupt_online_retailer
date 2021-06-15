@@ -27,7 +27,7 @@ int init(){
     memset(&serv_addr,0,sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;  
     serv_addr.sin_addr.s_addr = INADDR_ANY;  
-    serv_addr.sin_port = htons(8888);
+    serv_addr.sin_port = htons(PROTOCOL_PORT);
     if (bind(sockfd, (struct sockaddr *) &serv_addr,
               sizeof(serv_addr)) < 0){
               log_fatal_shortcut("bind_error");

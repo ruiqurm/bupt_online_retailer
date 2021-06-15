@@ -83,6 +83,10 @@ void AddGoodsDialog::on_pushButton_clicked()
             give_hint("非法的数量");
             return;
         }
+        if(count<0){
+            give_hint("数量不能小于1");
+            return;
+        }
     }else{
         give_hint("未输入数量");
         return;

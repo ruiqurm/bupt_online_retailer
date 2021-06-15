@@ -2,7 +2,9 @@
 #include"user.h"
 #include"goods.h"
 #include"transaction.h"
-
+#include<map>
+#include<vector>
+#include<string>
 
 namespace USER_TYPE{
 enum{
@@ -29,7 +31,7 @@ class Seller:public UserTemplate<USER_TYPE::seller,Seller>{
             }
             return *_goods;
         }
-        int buy(Cart&cart,std::vector<int>&selection);
+        std::tuple<std::string,std::vector<int>>  buy(Cart&cart,std::vector<int>&selection);
         ~Seller(){}
         // int buy(std::vector<int> selection);
     private:
@@ -40,7 +42,7 @@ class Seller:public UserTemplate<USER_TYPE::seller,Seller>{
 class Customer:public UserTemplate<USER_TYPE::customer,Customer>{
     public:
         Customer(UserData* p):UserTemplate(p){}
-        int buy(Cart&cart,std::vector<int>&selection);
+        std::tuple<std::string,std::vector<int>>  buy(Cart&cart,std::vector<int>&selection);
         int get_user_type()const override{
             return _TYPE;
         }

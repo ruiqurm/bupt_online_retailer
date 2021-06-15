@@ -205,7 +205,7 @@ int CartRecord::set(int user_id,int goods_id,int num){
     }
 }
 void CartRecord::remove(int user_id,int goods_id){
-    ProtocolWriter writer(send_buf,Protocol::CART_SET,base->token());
+    ProtocolWriter writer(send_buf,Protocol::CART_REMOVE,base->token());
     protoData::CartItem item;
     item.set_user(user_id);
     item.set_goods(goods_id);

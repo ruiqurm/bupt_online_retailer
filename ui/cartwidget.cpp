@@ -100,26 +100,34 @@ void cartWidget::on_submit_clicked(){
     int id;
     if(user->get_user_type()==USER_TYPE::customer){
         auto p = Customer::cast(user);
-        if ((id = p->buy(cart,v))>0){
-            for(auto&i:indexList){
-                model->removeRow(i.row());
-            }
-            qDebug("交易成功");
+        auto result = p->buy(cart,v);
+        if(""==std::get<0>(result)){
+           qDebug("交易成功");
+           for(auto&i:indexList){
+               model->removeRow(i.row());
+           }
+           for(auto& id:std::get<1>(result)){
+               (new tranForm(id))->exec();
+           }
         }else{
             qDebug("交易失败");
             return;
         }
     }else{
         auto p = Seller::cast(user);
-        if ((id = p->buy(cart,v))>0){
-            for(auto&i:indexList){
-                model->removeRow(i.row());
-            }
-            qDebug("交易成功");
+        auto result = p->buy(cart,v);
+        if(""==std::get<0>(result)){
+           qDebug("交易成功");
+           for(auto&i:indexList){
+               model->removeRow(i.row());
+           }
+           for(auto& id:std::get<1>(result)){
+               (new tranForm(id))->exec();
+           }
         }else{
             qDebug("交易失败");
             return;
         }
     }
-    (new tranForm(id))->exec();
+
 }

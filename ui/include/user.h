@@ -38,6 +38,7 @@ class User{
         
         //登录与注册
         static std::shared_ptr<User> login(const string& username,const string& password);
+        void logout();
         static bool register_(int type,const string& username,const string& password);
         
         bool change_password(const string&pre_pass,const string&after_pass){

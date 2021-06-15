@@ -86,7 +86,9 @@ void MainWindow::on_login(std::shared_ptr<User> user){
 void MainWindow::my_on_receive_logout(){
     mainframe->hide();
     mainframe = market;
-    this->user = nullptr;
+    this->user->logout();
+    this->user.reset();
+//    this->user = nullptr;
     if(this->cart){
         delete this->cart;
         this->cart = nullptr;

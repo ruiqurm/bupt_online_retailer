@@ -10,6 +10,9 @@ using std::string;
  * 
  */
 
+//端口
+constexpr int PROTOCOL_PORT = 12345;
+
 #pragma pack(1)
 struct Protocol{
     enum{
