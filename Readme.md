@@ -1,6 +1,13 @@
-本项目在windows和linux环境(编译器为g++8.0+)下都可以通过编译。 
+linux环境(编译器为g++>8.0 + protbuf)下都可以通过编译。 
 
 # 构建
+因为链接出了点问题，所以就用qmake来编译qt了。  
+
+## requirements
+* g++ 8.0+(使用了c++ 17语法)
+* google protobuf(part3服务端用到了)
+* qt5+
+
 ## 编译
 ```bash
 # 工作目录为当前项目根目录
