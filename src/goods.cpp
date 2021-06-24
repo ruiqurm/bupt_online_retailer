@@ -14,22 +14,23 @@ bool Goods::save(){
     auto &record = GoodsRecord::get_record();
     return record.update(data);
 }
+
 bool Goods::buy(User* u,int num){
     if(!u)return false;
     auto &record = UserRecord::get_record();
     auto seller = record.get(data.id);
-    if(!seller)return false;
-    //商家不存在
+    if(!seller)return false;///> 商家不存在，返回失败
+    
     #if DEBUG==1
     #include<iostream>
     std::cout<<"构建上下文"<<endl;
     #endif
     GoodsContext context(this,num,u);
     double volume = get_price(context);
-    if(u->balance()<volume){
+    if(u->balance()<volume){///> 用户余额小于商品价格，返回失败
         return false;
     }
-    if(data.remain<num){
+    if(data.remain<num){///> 商品不足，返回失败
         return false;
     }
     #if DEBUG==1
@@ -37,6 +38,8 @@ bool Goods::buy(User* u,int num){
     std::cout<<"尝试写入交易"<<endl;
     #endif
     if(Transaction::make_transaction(data.seller,u->id(),data.name,data.id,volume,data.price,num)){
+        // 交易成功
+        // 扣除商品数量，加减钱
         data.remain -= num;
         save();
         u->balance() -= volume;
@@ -53,6 +56,7 @@ bool Goods::buy(User* u,int num){
  */
 GoodsRecord::p_goods_construct GoodsRecord::register_types[256] {nullptr};
 GoodsRecord::GoodsRecord():manager(UserRecord::get_record()){
+    // 创建Goods
     static const char sql[]= "CREATE TABLE GOODS("  \
                                 "ID INTEGER PRIMARY KEY AUTOINCREMENT," \
                                 "NAME           CHAR(64)    NOT NULL," \
@@ -61,7 +65,7 @@ GoodsRecord::GoodsRecord():manager(UserRecord::get_record()){
                                 "TYPE           INT         NOT NULL," \
                                 "REMAIN         INT         NOT NULL," \
                                 "DESCRIPTION    TEXT        NOT NULL);";
-    Database::exec(db,sql,nullptr,nullptr);
+    Database::exec(db,sql,nullptr,nullptr);// 执行sql语句
 }
 std::shared_ptr<Goods> GoodsRecord::get(int id){
     static const char sql[] = "SELECT * FROM %s WHERE ID=%d";
@@ -77,7 +81,7 @@ GoodsRecord::pGoodsVec GoodsRecord::get_user_goods(int seller_id){
     static char buffer[48];
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
     snprintf(buffer,48,sql,TABLE_NAME,seller_id);
-    Database::exec(db,buffer,fetch_in_vector,pvec.get());
+    Database::exec(db,buffer,fetch_in_vector,pvec.get());// 执行sql语句
     return pvec;
 }
 
@@ -86,7 +90,7 @@ GoodsRecord::pGoodsVec GoodsRecord::get_all_goods(){
     static char buffer[48];
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
     snprintf(buffer,48,sql,TABLE_NAME);
-    Database::exec(db,buffer,fetch_in_vector,pvec.get());
+    Database::exec(db,buffer,fetch_in_vector,pvec.get());// 执行sql语句
     return pvec;
 }
 GoodsRecord::pGoodsVec GoodsRecord::get_goods_by_name(const string& search_for_name){
@@ -95,7 +99,7 @@ GoodsRecord::pGoodsVec GoodsRecord::get_goods_by_name(const string& search_for_n
     static char buffer[256];
     auto pvec = std::make_unique<std::vector<std::shared_ptr<Goods>>>();
     snprintf(buffer,256,sql,TABLE_NAME,search_for_name.c_str(),search_for_name.c_str());
-    Database::exec(db,buffer,fetch_in_vector,pvec.get());
+    Database::exec(db,buffer,fetch_in_vector,pvec.get());// 执行sql语句
     return pvec;
 }
 bool GoodsRecord::update(const GoodsData& data){
@@ -108,7 +112,7 @@ bool GoodsRecord::update(const GoodsData& data){
                                 "WHERE ID=%d";
     static char buffer[512];
     snprintf(buffer,512,sql,TABLE_NAME,data.name.c_str(),data.price,data.seller,data.remain,data.description.c_str(),data.id);
-    return Database::exec(db,buffer,nullptr,nullptr);
+    return Database::exec(db,buffer,nullptr,nullptr);// 执行sql语句
 }
 void GoodsRecord::remove(int id){
     auto& record = DiscountRecord::get_record();
@@ -238,6 +242,7 @@ int DiscountRecord::fetch_to_object(void*_data, int argc, char **argv, char **az
     }
     
     int type = atoi(argv[1]);
+    // 根据商品类型创建不同的discount
     switch (type){
     case Discount::DISCOUNT:
         (*(Discount**)_data) = new DiscountSimple(atoi(argv[0]),atoi(argv[1]),atoi(argv[2]),atof(argv[3]),atof(argv[4]));
@@ -258,6 +263,7 @@ int DiscountRecord::fetch_to_vector(void*_data, int argc, char **argv, char **az
     }
     auto& vec = *(std::unique_ptr<std::vector<std::shared_ptr<Discount>>>*)_data;
     int type = atoi(argv[1]);
+    // 根据商品类型创建不同的discount
     switch (type){
     case Discount::DISCOUNT:
 
