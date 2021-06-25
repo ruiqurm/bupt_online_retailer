@@ -1,5 +1,16 @@
+/**
+ * @file log.h
+ * @author ruiqurm (ruiqurm@gmail.com)
+ * @brief 日志
+ * @version 0.1
+ * @date 2021-06-09
+ */
+
+/**
+ * @brief 这个实现了多等级(TRACE,DEBUG,INFO,WARN,ERROR,FATAL)、彩色的日志，支持输出日志到文件
+ * 实现参考了https://github.com/rxi/log.c
+ */
 #pragma once
-//修改自https://github.com/rxi/log.c
 
 
 // #define LOG_INCLUDED

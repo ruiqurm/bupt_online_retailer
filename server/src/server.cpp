@@ -6,7 +6,7 @@ extern "C" {
 }
 
 
-string last_error;
+string last_error;/// 记录运行中的错误信息
 
 /********************
  *                  *
@@ -17,12 +17,16 @@ Executor::Executor(char* read_buffer,char* write_buffer,protoData::User*outer_us
     read_buf(read_buffer),write_buf(write_buffer),write_data(write_buf+sizeof(Protocol)),
     read_data(read_buffer + sizeof(Protocol)),_is_finished(false),user(nullptr),
     _is_error(false){
-    memcpy(write_buf,read_buf,8);
-    ((Protocol*)write_buf)->is_response = 1;
-    ((Protocol*)write_buf)->status = Protocol::OK;
-    set_length(0);
+    memcpy(write_buf,read_buf,8);// 复制id
+    ((Protocol*)write_buf)->is_response = 1; // 标记报文为回复
+    ((Protocol*)write_buf)->status = Protocol::OK; // 标记报文正常
+    set_length(0);// 设置回复报文长度为0
     // if(outer_user)log_info("有用户");
     // else log_info("无用户");
+    
+    // 传入用户指针主要是为了完成这样的功能：对于每个连接，只要登录一次或者检验一次token；后面重新连接重新登录或者校验
+    
+    // 如果需要登录，并且没有传入用户指针
     if(!outer_user && permission == PERMISSION_USER){
         auto& record = UserRecordWriter::get_record();
         user = record.get_user_by_token(((Protocol*)read_buf)->token);
@@ -62,17 +66,23 @@ void Executor::set_length(int length){
 void Executor::set_status(int type){
     ((Protocol*)write_buf)->status = type;
 }
+
+/********************
+ *                  *
+ *  UserExecutor    *
+ *                  *  
+ ********************/
 void UserLoginExecutor::execImp(){
     auto& record = UserRecordWriter::get_record();
     protoData::UserForm form;
     form.ParseFromArray(read_data,((Protocol*)read_buf)->length);
-    string token = record.login(form);
+    string token = record.login(form);// 登录，并获取token
     if(token.size()>0){
         //成功
-        memcpy(((Protocol*)write_buf)->token,token.c_str(),16);
+        memcpy(((Protocol*)write_buf)->token,token.c_str(),16); // 复制token到报文
         user = record.get_user(form.username());
         set_length(user->ByteSizeLong());
-        user->SerializeToArray(write_data,user->ByteSizeLong());
+        user->SerializeToArray(write_data,user->ByteSizeLong()); // 写入用户信息到报文
         log_debug("token=%.16s username=%s,type=%d",token.c_str(),user->username().c_str(),user->type());
     }else{
         set_error(Protocol::RUN_FAILED);

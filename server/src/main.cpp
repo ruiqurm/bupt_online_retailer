@@ -1,3 +1,8 @@
+/**
+ * @file main.cpp
+ * @author ruiqurm (ruiqurm@gmail.com)
+ * @brief 服务端主函数
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +21,11 @@ extern "C" {
 using std::thread;
 std::mutex g_mutex;
 
+/**
+ * @brief 建立连接，绑定0.0.0.0:端口上。
+ * 
+ * @return int 
+ */
 int init(){
     
     int sockfd =  socket(AF_INET, SOCK_STREAM, 0);
@@ -32,7 +42,7 @@ int init(){
               sizeof(serv_addr)) < 0){
               log_fatal_shortcut("bind_error");
               }
-    log_info("listen on 127.0.0.1:8888");
+    log_info("listen on 0.0.0.0:12345");
     listen(sockfd,5);
     return sockfd;
 }
@@ -48,13 +58,19 @@ int init(){
 //     }
 //     return true;
 // }
+
+/**
+ * @brief 处理请求的函数
+ * 
+ * @param sockfd 分配的文件流
+ */
 void handle_with_request(int sockfd);
 
 int main(int argc, char *argv[]){
     
      int sockfd, newsockfd, portno;
      socklen_t clilen;
-     char read_buffer[8192];
+     char read_buffer[8192];// 实际使用可以改大一点
      char write_buffer[8192];
      struct sockaddr_in serv_addr, cli_addr;
      int n;
@@ -70,20 +86,28 @@ int main(int argc, char *argv[]){
         log_error("ERROR on accept");
         log_info("server: got connection from %s port %d  in sockfd=%d",
             inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port),newsockfd);
-        thread t(handle_with_request,newsockfd);
-        t.detach();
+        thread t(handle_with_request,newsockfd);// 创建线程
+        t.detach();// 分离
     }
      close(sockfd);
      return 0; 
 }
 
 void handle_with_request(int sockfd){
+    /**
+     * @brief 处理的流程：
+     * 1. 接收数据
+     * 2. 加锁
+     * 3. 调用对应类型的执行器，执行器除了执行外，还会校验token，并生成出user对象（除了登录和注册）
+     * 4. 保存user对象的指针（不会被析构，因为全局只有一份user对象，见 @ref UserRecordWriter "UserRecordWriter"）,在下一轮可以使用
+     * 5. 解锁，回到1
+     */
     int size,n;
     char read_buffer[8192];
     char write_buffer[8192];
     Executor* executor;
-    protoData::User*user=nullptr;
-    bool has_authenticated = false;
+    protoData::User*user=nullptr; // 执行用户数据的指针
+    bool has_authenticated = false;// 是否登录
     while(true){
         size = 8192;
         
@@ -96,12 +120,12 @@ void handle_with_request(int sockfd){
             }
             break;
         }
-        g_mutex.lock();
+        g_mutex.lock();// 锁
         if ((executor = ExecutorFactory::get_executor(read_buffer,write_buffer,user))!=nullptr){
             executor->exec();
-            user = executor->get_user();
+            user = executor->get_user(); // 获取登录后的用户，并将在
         }
-        g_mutex.unlock();
+        g_mutex.unlock();// 解锁
         n = send(sockfd,write_buffer,executor->size(),0);
         if (n <= 0) {delete executor;executor = nullptr;;log_error("ERROR writing from socket");break;}
         delete executor;

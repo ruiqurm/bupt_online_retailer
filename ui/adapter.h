@@ -1,7 +1,17 @@
+/**
+ * @file adapter.h
+ * @author ruiqurm (ruiqurm@gmail.com)
+ * @brief 商品类型id转字符串
+ */
 #ifndef ADAPTER_H
 #define ADAPTER_H
 #include<include/concreteGoods.h>
 #include<QString>
+
+/**
+ * @brief 商品类型id转字符串
+ * 
+ */
 class qtGoodsAdapter{
 
 //        GOODS_TYPE;

@@ -3,4 +3,4 @@
 *.cpp linguist-language=cpp
 *.cc linguist-language=cpp
 *.ui linguist-language=cpp
-server/*.c linguist-vendored
+

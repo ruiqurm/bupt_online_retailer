@@ -1,7 +1,16 @@
+/**
+ * @file transaction.h
+ * @author ruiqurm (ruiqurm@gmail.com)
+ * @brief 交易订单与购物车
+ */
 #pragma once
 #include"user.h"
 #include"goods.h"
 
+/**
+ * @brief 交易订单
+ * 
+ */
 class Transaction{
     public:
         Transaction(int id,int from,string from_name,int to,string to_name,bool finished,double volume,
@@ -33,32 +42,63 @@ class Transaction{
         // Transaction(){}
         // make_transaction
        
+        /// 获取卖方指针
         std::shared_ptr<User> from()const{
             auto& record = UserRecord::get_record();
             return record.create_user(record.get(_from));
         }
+
+        /// 获取买方指针
        std::shared_ptr<User> to()const{
             auto& record = UserRecord::get_record();
             return record.create_user(record.get(_to));
         }
-        void cancel();
-        const int id()const{return _id;}
-       static string write_detail(const std::map<int,std::tuple<string,int,double>>&data);
-       const string& raw_detail()const{
-           return _detail;
-       }
-       const std::shared_ptr<std::map<int,std::tuple<string,int,double>>> detail();
-       bool is_finished()const{return _finished;}
-       bool set_finished();
-       int from_id()const{return _from;}
-       int to_id()const{return _to;}
-       const string& from_name()const{return _from_name;} 
-       const string& to_name()const{return _to_name;} 
-       const char* c_from_name()const{return _from_name.c_str();}
-       const char* c_to_name()const{return _to_name.c_str();}
 
-       time_t timestamp()const{return _timestamp;}
-       double volume()const{return _volume;}
+        /// 取消订单
+        void cancel();
+
+        /// id 
+        const int id()const{return _id;}
+
+        /**
+         * @brief 替换详情
+         * @details 详情的形式是一个字典，键是商品id，值是商品名，数量，价格tuple
+         * @param data 
+         * @return string 
+         */
+       static string write_detail(const std::map<int,std::tuple<string,int,double>>&data);
+
+        /// 详情
+        const string& raw_detail()const{
+            return _detail;
+        }
+
+       /// 获取详情字典
+        const std::shared_ptr<std::map<int,std::tuple<string,int,double>>> detail();
+
+       /// 订单是否完成
+        bool is_finished()const{return _finished;}
+
+       /// 订单标记完成
+        bool set_finished();
+
+       /// 卖方id
+        int from_id()const{return _from;}
+
+       /// 买方id
+        int to_id()const{return _to;}
+
+       /// 卖方用户名
+        const string& from_name()const{return _from_name;} 
+    
+       /// 买方用户名
+        const string& to_name()const{return _to_name;} 
+        const char* c_from_name()const{return _from_name.c_str();}
+        const char* c_to_name()const{return _to_name.c_str();}
+        
+        /// 时间戳
+        time_t timestamp()const{return _timestamp;}
+        double volume()const{return _volume;}
     protected:
         int save();
     private:
@@ -72,26 +112,49 @@ class Transaction{
 };
 class TransactionRecord{
     public:
+        /// 指向订单对象的vector的智能指针 类型 
         typedef std::unique_ptr<std::vector<std::shared_ptr<Transaction>>> pTransVec;
         static TransactionRecord& get_record(){
             static TransactionRecord record;
             return record;
         }
-        TransactionRecord(const DiscountRecord&)=delete;//禁止拷贝造
+        TransactionRecord(const DiscountRecord&)=delete;//禁止拷贝构造
         
-        //获取订单
+        /**
+         * @brief 获取指定用户的订单
+         * 
+         * @param user_id 用户id
+         * @return pTransVec 指向订单vector的智能指针
+         */    
         pTransVec get_transaction(int user_id,bool is_finished);
         
-        //生成订单
-        int set(Transaction&);
+        /**
+         * @brief 生成订单
+         * @param t 订单对象
+         * @return int 
+         */
+        int set(Transaction&t);
         
-        //获取订单
+        /**
+         * @brief 获取指定id的订单
+         * 
+         * @param id 订单id
+         * @return 指向订单的智能指针
+         */      
         std::shared_ptr<Transaction> get(int id);
 
-        //移除订单。如果未完成会释放资源，否则跳过
+        /**
+         * @brief 取消订单
+         * @details 取消订单。如果未完成会释放资源，否则跳过
+         * @param id 
+         */
         void cancel(int id);
 
-        //确认订单
+        /**
+         * @brief 订单完成
+         * 
+         * @param id 订单id
+         */
         void set_finished(int id);
         
     protected:
@@ -104,14 +167,24 @@ class TransactionRecord{
         char send_buf[8192];
         char recv_buf[8192];
 };
+
+/**
+ * @brief 购物车数据库接口
+ * 
+ */
 class CartRecord{
     public:
         static CartRecord& get_record(){
             static CartRecord record;
             return record;
         }
+        /// 获取购物车
         std::map<int,int> get(int user_id);
+
+        /// 添加购物车项
         int set(int user_id,int goods_id,int num);
+
+        /// 移除一个购物车项
         void remove(int user_id,int goods_id);
         
     protected:
@@ -122,20 +195,31 @@ class CartRecord{
         char send_buf[8192];
         char recv_buf[8192];
 };
+
+/**
+ * @brief 
+ * 
+ */
 class Cart{
     //购物车
     public:
         Cart(int user_id);
         
-        //判断是否存在
+        /// 判断是否存在
         bool exist(int goods_id);
 
-        //添加
+        /// 添加
         bool add(int goods_id,int delta,int max_count);
+
+        /// 清空
         void clear();
-        //添加
+        
+        ///添加一个商品的数量
         void add(int goods_id,int delta);
+
+        /// 减少一个商品的数量        
         void reduce(int goods_id,int delta);
+        
         //设置id为更新的数值
         bool set(int goods_id,int num,int max_count=-1);
         
