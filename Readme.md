@@ -1,3 +1,9 @@
+# BUPT C++ OOP
+c++课程设计项目   
+具体设计见doc.pdf。
+
+
+
 linux环境(编译器为g++>8.0 + protbuf)下都可以通过编译。 
 
 # 构建
