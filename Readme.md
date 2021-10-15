@@ -1,6 +1,6 @@
 # BUPT C++ OOP
 c++课程设计项目   
-具体设计见doc.pdf。
+具体设计见doc.pdf。     
 
 
 
